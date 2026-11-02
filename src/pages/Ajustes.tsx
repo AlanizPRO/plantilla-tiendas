@@ -2,6 +2,8 @@ import { doc, setDoc } from 'firebase/firestore'
 import { useState } from 'react'
 import { mensajeError, type Ajustes as TAjustes } from '../datos'
 import { db } from '../firebase'
+import { T } from '../textos'
+import BotonRespaldo from './BotonRespaldo'
 
 export default function Ajustes({ ajustes }: { ajustes: TAjustes }) {
   const [a, setA] = useState<TAjustes>(ajustes)
@@ -61,6 +63,11 @@ export default function Ajustes({ ajustes }: { ajustes: TAjustes }) {
       {estado === 'ok' && <p className="ok">Guardado.</p>}
       {estado && estado !== 'ok' && estado !== 'guardando' && <p className="error">{estado}</p>}
       <button className="btn btn-principal" disabled={estado === 'guardando'} onClick={guardar}>{estado === 'guardando' ? 'Guardando…' : 'Guardar'}</button>
+      <BotonRespaldo hojas={[
+        { coleccion: 'productos', nombre: T.Productos }, { coleccion: 'costos', nombre: 'Costos' }, { coleccion: 'vitrinas', nombre: T.Ubicaciones },
+        { coleccion: 'proformas', nombre: 'Proformas' }, { coleccion: 'selecciones', nombre: 'Selecciones' }, { coleccion: 'movimientos', nombre: 'Movimientos' },
+        { coleccion: 'usuarios', nombre: 'Vendedores' },
+      ]} />
     </section>
   )
 }
