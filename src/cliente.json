@@ -1,0 +1,28 @@
+{
+  "nombreApp": "Tienda Demo",
+  "nombreCorto": "Tienda",
+  "descripcion": "Relojería",
+  "ciudad": "Managua",
+  "correoAdmin": "correo-del-dueno@gmail.com",
+  "colorPrincipal": "#1f2a44",
+  "colorAcento": "#b9822a",
+  "colorFondo": "#f5f3ee",
+  "plan": "spark",
+  "textos": {
+    "producto": "reloj",
+    "productos": "relojes",
+    "productoFemenino": false,
+    "ubicacion": "vitrina",
+    "ubicaciones": "vitrinas",
+    "ubicacionFemenino": true
+  },
+  "modulos": ["inventario", "ubicaciones", "selecciones", "proformas"],
+  "venta": { "moneda": "C$", "validezDias": 7, "garantia": "" },
+  "estilos": ["Deportivo", "Elegante", "Clásico", "Casual", "Inteligente"],
+  "firebase": {
+    "projectId": "id-del-proyecto",
+    "apiKey": "",
+    "appId": "",
+    "messagingSenderId": ""
+  }
+}
