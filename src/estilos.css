@@ -220,3 +220,8 @@ label.campo { display: flex; flex-direction: column; gap: 6px; font-weight: 700;
 .cabeza-columna { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
 .tarjeta-venta { background: var(--fondo); border: 1px solid var(--linea); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .tarjeta-venta .btn { align-self: flex-start; }
+
+/* Foto del colaborador */
+.foto-perfil { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none; vertical-align: middle; }
+.foto-perfil-letra { display: inline-grid; place-items: center; background: var(--acento); color: var(--sobre-acento); font-weight: 800; }
+.fila-titulo { display: flex; align-items: center; gap: 6px; }

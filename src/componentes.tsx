@@ -10,12 +10,12 @@ export function Logo() {
   return <div className="logo" aria-hidden="true">{iniciales(cliente.nombreApp)}</div>
 }
 
-export function Encabezado({ subtitulo, derecha }: { subtitulo: string; derecha: ReactNode }) {
+export function Encabezado({ subtitulo, derecha, avatar }: { subtitulo: string; derecha: ReactNode; avatar?: ReactNode }) {
   return (
     <header className="top">
       <div className="marca">
         <Logo />
-        <div style={{ minWidth: 0 }}><h3>{cliente.nombreApp}</h3><small className="suave">{subtitulo}</small></div>
+        <div style={{ minWidth: 0 }}><h3>{cliente.nombreApp}</h3><small className="suave fila-titulo">{avatar}{subtitulo}</small></div>
       </div>
       <div className="fila" style={{ flexWrap: 'nowrap' }}>{derecha}</div>
     </header>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { cargarInventarioInicial, inventarioInicial, marcarCargado } from '../cargaInicial'
 import { cliente, tiene } from '../cliente'
 import { Barra, Encabezado, type Pestana } from '../componentes'
-import { col, todos, useAjustesConEstado, useLista, type Ajustes as TAjustes, type Producto, type Seleccion, type Vitrina } from '../datos'
+import { col, todos, useAjustesConEstado, useDoc, useLista, type Ajustes as TAjustes, type Producto, type Seleccion, type Vitrina } from '../datos'
 import { ICONOS } from '../iconos'
 import { salir } from '../sesion'
 import { T } from '../textos'
@@ -12,6 +12,7 @@ import Ajustes from './Ajustes'
 import Equipo from './Equipo'
 import Gastos from './Gastos'
 import CajaChica from './CajaChica'
+import { Avatar, CambiarFoto } from './MiFoto'
 import Tablero from './Tablero'
 import Inicio from './Inicio'
 import Inventario from './Inventario'
@@ -58,11 +59,12 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
     { id: 'mas', nombre: 'Más', icono: 'mas' },
   ]
   const actual = ['equipo', 'ajustes', 'gastos', 'tablero', 'caja'].includes(vista) ? 'mas' : vista
+  const miPerfil = useDoc<{ foto?: string }>(admin ? null : `usuarios/${ctx.uid}`)
 
   return (
     <>
       <div className="app">
-        <Encabezado subtitulo={admin ? 'Dueño' : `Vendedor · ${ctx.nombre.split(' ')[0]}`} derecha={botonTema} />
+        <Encabezado subtitulo={admin ? 'Dueño' : `Colaborador · ${ctx.nombre.split(' ')[0]}`} derecha={botonTema} avatar={!admin && miPerfil ? <Avatar foto={miPerfil.foto} texto={ctx.nombre.charAt(0).toUpperCase()} /> : null} />
         <main>
           {cargado && <p className="ok" role="status" onClick={() => setCargado('')}>{cargado}</p>}
           {vista === 'inicio' && <Inicio ctx={ctx} selecciones={selecciones} onIr={ir} />}
@@ -78,8 +80,9 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
             <section className="pantalla">
               <h1>Más</h1>
               <p className="suave chico">Versión de la app: <b>{(cliente as { version?: number }).version ?? 1}</b></p>
+              {!admin && <CambiarFoto uid={ctx.uid} foto={miPerfil?.foto} />}
               <div className="lista">
-                {admin && <Opcion icono="equipo" titulo="Vendedores" texto="Invitar y quitar vendedores" onClick={() => ir('equipo')} />}
+                {admin && <Opcion icono="equipo" titulo="Colaboradores" texto="Invitar y quitar colaboradores" onClick={() => ir('equipo')} />}
                 <Opcion icono="ventas" titulo="Tablero de ventas" texto="Proforma, aceptada, en reparto y finalizada" onClick={() => ir('tablero')} />
                 {admin && <Opcion icono="inicio" titulo="Caja chica" texto="Entradas, salidas y saldo del efectivo" onClick={() => ir('caja')} />}
                 {admin && <Opcion icono="inicio" titulo="Gastos y ganancia" texto="Renta, salarios y ganancia real del mes" onClick={() => ir('gastos')} />}

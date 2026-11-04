@@ -52,7 +52,7 @@ export default function Inicio({ ctx, selecciones, onIr }: { ctx: Contexto; sele
       {admin && productos.length === 0 && (
         <div className="panel destacado">
           <h3>Primeros pasos</h3>
-          <p className="suave">1. Pon el teléfono y los estilos en Ajustes. 2. Crea tus {T.ubicaciones}. 3. Agrega tus {T.productos} con foto. 4. Invita a tus vendedores.</p>
+          <p className="suave">1. Pon el teléfono y los estilos en Ajustes. 2. Crea tus {T.ubicaciones}. 3. Agrega tus {T.productos} con foto. 4. Invita a tus colaboradores.</p>
         </div>
       )}
     </section>

@@ -69,7 +69,7 @@ export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAj
       <BotonRespaldo hojas={[
         { coleccion: 'productos', nombre: T.Productos }, { coleccion: 'costos', nombre: 'Costos' }, { coleccion: 'vitrinas', nombre: T.Ubicaciones },
         { coleccion: 'proformas', nombre: 'Proformas' }, { coleccion: 'selecciones', nombre: 'Selecciones' }, { coleccion: 'movimientos', nombre: 'Movimientos' },
-        { coleccion: 'usuarios', nombre: 'Vendedores' },
+        { coleccion: 'usuarios', nombre: 'Colaboradores' },
       ]} />
     </section>
   )

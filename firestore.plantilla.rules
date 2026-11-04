@@ -109,7 +109,10 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['rol', 'codigo', 'nombre', 'correo', 'telefono', 'activo'])
         && request.resource.data.rol == 'vendedor' && request.resource.data.activo == true
         && get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigo)).data.usada == false;
-      allow update, delete: if esAdmin();
+      allow update: if esAdmin() || (conSesion() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['foto'])
+        && request.resource.data.get('foto', '') is string && request.resource.data.get('foto', '').size() <= 60000);
+      allow delete: if esAdmin();
     }
   }
 }

@@ -6,12 +6,12 @@ import { codigoAzar, col, enlaceWhatsApp, iniciales, mensajeError, todos, useLis
 import { db } from '../firebase'
 import { ICONOS } from '../iconos'
 
-type Vendedor = { id: string; nombre: string; correo: string; telefono?: string; activo?: boolean }
+type Vendedor = { id: string; nombre: string; correo: string; telefono?: string; activo?: boolean; foto?: string }
 type Invitacion = { id: string; nombre: string; telefono?: string; usada: boolean }
 
 const enlaceInvitacion = (codigo: string) => `${location.origin}/?i=${codigo}`
 const textoInvitacion = (i: { id: string; nombre: string }) =>
-  `Hola ${i.nombre.split(' ')[0]}, te invito a la app de ${cliente.nombreApp} para vendedores. Ábrela aquí y entra con tu cuenta de Google: ${enlaceInvitacion(i.id)}\n(Si te pide código: ${i.id})`
+  `Hola ${i.nombre.split(' ')[0]}, te invito a la app de ${cliente.nombreApp} para colaboradores. Ábrela aquí y entra con tu cuenta de Google: ${enlaceInvitacion(i.id)}\n(Si te pide código: ${i.id})`
 
 export default function Equipo() {
   const vendedores = useLista<Vendedor>(todos('usuarios')) ?? []
@@ -30,15 +30,15 @@ export default function Equipo() {
   return (
     <section className="pantalla">
       <div className="top">
-        <div><h1>Vendedores</h1><p className="suave">Ven el inventario y hacen ventas. No ven los costos.</p></div>
+        <div><h1>Colaboradores</h1><p className="suave">Ven el inventario y hacen ventas. No ven los costos.</p></div>
         <button className="btn btn-principal" onClick={() => setNueva(true)}>+ Invitar</button>
       </div>
       {error && <p className="error">{error}</p>}
-      {vendedores.length === 0 && pendientes.length === 0 && <Vacio>Todavía no hay vendedores. Toca "+ Invitar" y mándale el enlace por WhatsApp.</Vacio>}
+      {vendedores.length === 0 && pendientes.length === 0 && <Vacio>Todavía no hay colaboradores. Toca "+ Invitar" y mándale el enlace por WhatsApp.</Vacio>}
       <div className="lista">
         {vendedores.map((v) => (
           <div key={v.id} className="fila-item">
-            <span className="ini" style={v.activo === false ? { background: 'var(--suave)' } : undefined}>{iniciales(v.nombre || v.correo)}</span>
+            <span className="ini" style={v.activo === false ? { background: 'var(--suave)' } : undefined}>{v.foto ? <img className="foto-perfil" src={v.foto} alt="" /> : iniciales(v.nombre || v.correo)}</span>
             <div><b>{v.nombre || v.correo}</b><small>{v.correo}{v.telefono ? ` · ${v.telefono}` : ''}</small></div>
             {v.activo === false
               ? <button className="btn btn-borde btn-chico" onClick={() => activar(v, true)}>Devolver acceso</button>
@@ -72,7 +72,7 @@ function NuevaInvitacion({ onCerrar }: { onCerrar: () => void }) {
   const [error, setError] = useState('')
 
   async function crear() {
-    if (!nombre.trim()) { setError('Escribe el nombre del vendedor.'); return }
+    if (!nombre.trim()) { setError('Escribe el nombre del colaborador.'); return }
     setError('')
     try {
       const codigo = codigoAzar()
@@ -83,7 +83,7 @@ function NuevaInvitacion({ onCerrar }: { onCerrar: () => void }) {
   }
 
   return (
-    <Hoja titulo="Invitar vendedor" onCerrar={onCerrar}>
+    <Hoja titulo="Invitar colaborador" onCerrar={onCerrar}>
       {!creada ? (
         <>
           <div className="campos">
