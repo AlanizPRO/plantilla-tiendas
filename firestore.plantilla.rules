@@ -47,6 +47,11 @@ service cloud.firestore {
       allow read, write: if esAdmin();
     }
 
+    // Caja chica (efectivo): solo el dueño.
+    match /caja/{id} {
+      allow read, write: if esAdmin();
+    }
+
     // Fotos grandes. Se pueden abrir sin sesión (el cliente las ve en su enlace) pero no listar.
     match /fotos/{id} {
       allow get: if true;
