@@ -11,7 +11,9 @@ function cargar(archivo: File): Promise<HTMLImageElement> {
   })
 }
 
-function dibujar(img: HTMLImageElement, lado: number, cuadrada: boolean) {
+type Fuente = HTMLImageElement | HTMLCanvasElement
+
+function dibujar(img: Fuente, lado: number, cuadrada: boolean) {
   const lienzo = document.createElement('canvas')
   const escala = Math.min(1, lado / Math.max(img.width, img.height))
   if (cuadrada) {
@@ -37,10 +39,52 @@ function comprimir(lienzo: HTMLCanvasElement, maxBytes: number) {
   return datos
 }
 
+// Quita las franjas blancas o grises que rodean al reloj (fondo de la caja o de la mesa),
+// para que el reloj llene el cuadro de la app. Si no está claro dónde termina el reloj, deja la foto igual.
+function recortarFondo(img: HTMLImageElement): Fuente {
+  const lado = 160
+  const esc = Math.min(1, lado / Math.max(img.width, img.height))
+  const w = Math.max(1, Math.round(img.width * esc))
+  const h = Math.max(1, Math.round(img.height * esc))
+  const c = document.createElement('canvas')
+  c.width = w; c.height = h
+  const g = c.getContext('2d', { willReadFrequently: true })!
+  g.drawImage(img, 0, 0, w, h)
+  const datos = g.getImageData(0, 0, w, h).data
+  // Fondo = pixel casi blanco o gris muy claro y poco color.
+  const fondo = (i: number) => {
+    const r = datos[i], gr = datos[i + 1], b = datos[i + 2]
+    const max = Math.max(r, gr, b), min = Math.min(r, gr, b)
+    return min >= 205 && max - min <= 28
+  }
+  let x0 = w, x1 = -1, y0 = h, y1 = -1
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (fondo((y * w + x) * 4)) continue
+    if (x < x0) x0 = x
+    if (x > x1) x1 = x
+    if (y < y0) y0 = y
+    if (y > y1) y1 = y
+  }
+  if (x1 < 0) return img
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1
+  // Solo recorta si el reloj ocupa una parte clara de la foto (si es todo fondo, no tocar).
+  if (bw * bh > w * h * 0.85 || bw * bh < w * h * 0.08) return img
+  const margen = 0.04
+  const sx = Math.max(0, Math.floor((x0 - bw * margen) / w * img.width))
+  const sy = Math.max(0, Math.floor((y0 - bh * margen) / h * img.height))
+  const ex = Math.min(img.width, Math.ceil((x1 + 1 + bw * margen) / w * img.width))
+  const ey = Math.min(img.height, Math.ceil((y1 + 1 + bh * margen) / h * img.height))
+  const r = document.createElement('canvas')
+  r.width = ex - sx; r.height = ey - sy
+  r.getContext('2d')!.drawImage(img, sx, sy, ex - sx, ey - sy, 0, 0, r.width, r.height)
+  return r
+}
+
 export async function prepararFoto(archivo: File) {
   const img = await cargar(archivo)
+  const sinFondo = recortarFondo(img)
   return {
-    grande: comprimir(dibujar(img, 1100, false), 150_000),
-    miniatura: comprimir(dibujar(img, 220, true), 14_000),
+    grande: comprimir(dibujar(sinFondo, 1100, false), 150_000),
+    miniatura: comprimir(dibujar(sinFondo, 220, true), 14_000),
   }
 }
