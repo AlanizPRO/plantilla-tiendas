@@ -30,9 +30,9 @@ service cloud.firestore {
     match /productos/{id} {
       allow read: if esEquipo();
       allow create, delete: if esAdmin();
-      // Los vendedores pueden mover, apartar o vender; el dueño cambia todo.
+      // Los vendedores pueden mover, apartar, vender y cambiar fotos; el dueño cambia todo.
       allow update: if esAdmin() || (esVendedor()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'vitrinaId', 'segmento', 'actualizado', 'vendidoEn']));
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'vitrinaId', 'segmento', 'actualizado', 'vendidoEn', 'fotos', 'miniatura']));
     }
 
     // Costos aparte: solo el dueño.
@@ -44,7 +44,8 @@ service cloud.firestore {
     match /fotos/{id} {
       allow get: if true;
       allow list: if esEquipo();
-      allow create, update, delete: if esAdmin();
+      // El equipo (dueño y vendedores) agrega y quita fotos de los productos.
+      allow create, update, delete: if esEquipo();
     }
 
     match /movimientos/{id} {

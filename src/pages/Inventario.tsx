@@ -209,6 +209,7 @@ export function HojaProducto({ p, ctx, onCerrar }: { p: Producto; ctx: Contexto;
       </div>
       <SelectorLugar ctx={ctx} estado={p.estado} vitrinaId={p.vitrinaId} segmento={p.segmento} onCambiar={mover} />
       {error && <p className="error">{error}</p>}
+      {!ctx.admin && <FotosProducto p={p} onListo={onCerrar} />}
       {ctx.admin && (
         <div className="fila">
           <button className="btn btn-borde" onClick={() => setEditando(true)}>Editar</button>
@@ -313,5 +314,64 @@ function FormProducto({ ctx, p, onCerrar }: { ctx: Contexto; p?: Producto; onCer
       {error && <p className="error">{error}</p>}
       <button className="btn btn-principal" disabled={guardando || procesando} onClick={guardar}>{guardando ? 'Guardando…' : 'Guardar'}</button>
     </Hoja>
+  )
+}
+
+// Fotos del producto para el vendedor (no puede cambiar precio ni datos del reloj).
+function FotosProducto({ p, onListo }: { p: Producto; onListo: () => void }) {
+  const [viejas, setViejas] = useState<string[]>(p.fotos ?? [])
+  const [nuevas, setNuevas] = useState<FotoNueva[]>([])
+  const [procesando, setProcesando] = useState(false)
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
+  const total = viejas.length + nuevas.length
+
+  async function agregar(archivos: FileList | null) {
+    if (!archivos?.length) return
+    setProcesando(true); setError('')
+    try {
+      const listas: FotoNueva[] = []
+      for (const a of Array.from(archivos).slice(0, 6 - total)) listas.push(await prepararFoto(a))
+      setNuevas((x) => [...x, ...listas].slice(0, 6 - viejas.length))
+    } catch (e) { setError((e as Error).message) } finally { setProcesando(false) }
+  }
+
+  async function guardar() {
+    setGuardando(true); setError('')
+    try {
+      const idsNuevos: string[] = []
+      for (const foto of nuevas) {
+        const r = await addDoc(col('fotos'), { datos: foto.grande, productoId: p.id })
+        idsNuevos.push(r.id)
+      }
+      for (const id of (p.fotos ?? []).filter((x) => !viejas.includes(x))) await deleteDoc(doc(db, 'fotos', id))
+      const fotos = [...viejas, ...idsNuevos]
+      const miniatura = viejas.length ? p.miniatura ?? '' : nuevas[0]?.miniatura ?? ''
+      await updateDoc(doc(db, 'productos', p.id), { fotos, miniatura, actualizado: serverTimestamp() })
+      onListo()
+    } catch (e) { setError(mensajeError(e)); setGuardando(false) }
+  }
+
+  return (
+    <div className="panel">
+      <h3>Fotos</h3>
+      <div className="fotos-form">
+        {viejas.map((id, i) => (
+          <div key={id} className="foto-mini"><span className="suave chico">Foto {i + 1}</span>
+            <button aria-label="Quitar foto" onClick={() => setViejas((x) => x.filter((y) => y !== id))}>×</button></div>
+        ))}
+        {nuevas.map((foto, i) => (
+          <div key={i} className="foto-mini"><img src={foto.miniatura} alt="" />
+            <button aria-label="Quitar foto" onClick={() => setNuevas((x) => x.filter((_, j) => j !== i))}>×</button></div>
+        ))}
+        {total < 6 && (
+          <label className="foto-mini agregar" htmlFor="v-fotos">{procesando ? '…' : ICONOS.camara}<span>Foto</span>
+            <input id="v-fotos" type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => { agregar(e.target.files); e.target.value = '' }} />
+          </label>
+        )}
+      </div>
+      {error && <p className="error">{error}</p>}
+      <button className="btn btn-principal" disabled={guardando || procesando} onClick={guardar}>{guardando ? 'Guardando…' : 'Guardar fotos'}</button>
+    </div>
   )
 }
