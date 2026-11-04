@@ -7,6 +7,7 @@ App para tiendas con inventario por ubicación (relojerías, ópticas, joyerías
 ## Cómo se usa
 
 1. **Vitrinas:** el dueño crea sus vitrinas con segmentos (A, B…). Cada segmento muestra cuántos productos tiene; con "Contar" se marcan los que se ven y la app dice cuáles faltan.
+1. **Mover varios a la vez:** en un segmento o en Productos se toca "Mover varios", se eligen los que van (o "Todos") y se toca "Mover" para escoger la vitrina, segmento o bodega. Cada uno queda en los movimientos, igual que al moverlo solo.
 2. **Productos:** marca, modelo, precio, estilo, hasta 6 fotos y dónde está (vitrina y segmento, bodega, apartado o vendido). El costo solo lo ve el dueño.
 3. **Selección para un cliente:** el vendedor elige hasta 12 productos y manda el enlace `/s/…` por WhatsApp. El cliente lo abre sin cuenta, marca "Me gusta" y deja una nota. Al vendedor le aparece "Ya eligió".
 4. **Proforma:** sale de la selección (o desde cero), con descuento, validez y garantía. Se comparte el enlace `/p/…`, que el cliente puede imprimir o guardar en PDF. "Se vendió" pasa los productos a Vendido.

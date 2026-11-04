@@ -28,7 +28,7 @@ export type Proforma = {
   estado: 'borrador' | 'enviada' | 'vendida' | 'anulada'; seleccionId?: string
   vendedorUid: string; vendedorNombre: string; creada?: Timestamp; vendidaEn?: Timestamp
 }
-export type Movimiento = { id: string; productoId: string; de: string; a: string; por: string; fecha?: Timestamp }
+export type Movimiento = { id: string; productoId: string; de: string; a: string; por: string; fecha?: Timestamp; enGrupo?: number }
 export type Ajustes = {
   nombreTienda: string; telefono: string; direccion: string; moneda: string
   validezDias: number; garantia: string; notaProforma: string; estilos: string[]

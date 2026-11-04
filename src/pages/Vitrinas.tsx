@@ -5,6 +5,7 @@ import { col, mensajeError, nombreProducto, type Producto, type Vitrina } from '
 import { db } from '../firebase'
 import { T } from '../textos'
 import { HojaProducto, Tarjeta } from './Inventario'
+import { BarraSeleccion, HojaMover } from './MoverVarios'
 import type { Contexto } from './Tienda'
 
 export default function Vitrinas({ ctx }: { ctx: Contexto }) {
@@ -51,24 +52,43 @@ export default function Vitrinas({ ctx }: { ctx: Contexto }) {
 
 function HojaSegmento({ ctx, vitrina, segmento, productos, onCerrar }: { ctx: Contexto; vitrina: Vitrina; segmento: string; productos: Producto[]; onCerrar: () => void }) {
   const [abierto, setAbierto] = useState<string | null>(null)
-  const [contando, setContando] = useState(false)
+  const [modo, setModo] = useState<'ver' | 'contar' | 'elegir'>('ver')
   const [vistos, setVistos] = useState<string[]>([])
+  const [elegidos, setElegidos] = useState<string[]>([])
+  const [moviendo, setMoviendo] = useState(false)
+  const [aviso, setAviso] = useState('')
   const producto = productos.find((p) => p.id === abierto)
   const faltan = productos.filter((p) => !vistos.includes(p.id))
+  const marcar = (lista: string[], id: string) => lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]
+  const cambiarModo = (m: typeof modo) => { setModo(modo === m ? 'ver' : m); setVistos([]); setElegidos([]); setAviso('') }
+  const aMover = productos.filter((p) => elegidos.includes(p.id))
   return (
     <Hoja titulo={`${vitrina.nombre}${segmento ? ` · ${segmento}` : ''}`} onCerrar={onCerrar}>
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
-        <span className="suave">{productos.length} {T.productos}</span>
-        {productos.length > 0 && <button className="btn btn-borde btn-chico" onClick={() => { setContando(!contando); setVistos([]) }}>{contando ? 'Terminar conteo' : 'Contar'}</button>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'inherit' }}>
+        <div className="fila" style={{ justifyContent: 'space-between' }}>
+          <span className="suave">{productos.length} {T.productos}</span>
+          {productos.length > 0 && (
+            <div className="fila">
+              {modo !== 'contar' && <button className="btn btn-borde btn-chico" onClick={() => cambiarModo('elegir')}>{modo === 'elegir' ? 'Cancelar' : 'Mover varios'}</button>}
+              {modo !== 'elegir' && <button className="btn btn-borde btn-chico" onClick={() => cambiarModo('contar')}>{modo === 'contar' ? 'Terminar conteo' : 'Contar'}</button>}
+            </div>
+          )}
+        </div>
+        {aviso && <p className="ok">{aviso}</p>}
+        {modo === 'contar' && <p className={faltan.length ? 'aviso' : 'ok'}>{faltan.length
+          ? `Toca cada ${T.producto} que ves. Faltan ${faltan.length}: ${faltan.slice(0, 4).map(nombreProducto).join(', ')}${faltan.length > 4 ? '…' : ''}`
+          : 'Todo completo ✓'}</p>}
+        {productos.length === 0 && <Vacio>Aquí no hay {T.productos}.</Vacio>}
+        <div className="rejilla">
+          {productos.map((p) => <Tarjeta key={p.id} p={p} ctx={ctx}
+            marcado={modo === 'contar' ? vistos.includes(p.id) : modo === 'elegir' ? elegidos.includes(p.id) : undefined}
+            onClick={() => modo === 'contar' ? setVistos((v) => marcar(v, p.id)) : modo === 'elegir' ? setElegidos((v) => marcar(v, p.id)) : setAbierto(p.id)} />)}
+        </div>
       </div>
-      {contando && <p className={faltan.length ? 'aviso' : 'ok'}>{faltan.length
-        ? `Toca cada ${T.producto} que ves. Faltan ${faltan.length}: ${faltan.slice(0, 4).map(nombreProducto).join(', ')}${faltan.length > 4 ? '…' : ''}`
-        : 'Todo completo ✓'}</p>}
-      {productos.length === 0 && <Vacio>Aquí no hay {T.productos}.</Vacio>}
-      <div className="rejilla">
-        {productos.map((p) => <Tarjeta key={p.id} p={p} ctx={ctx} marcado={contando ? vistos.includes(p.id) : undefined}
-          onClick={() => contando ? setVistos((v) => v.includes(p.id) ? v.filter((x) => x !== p.id) : [...v, p.id]) : setAbierto(p.id)} />)}
-      </div>
+      {modo === 'elegir' && <BarraSeleccion cuantos={elegidos.length} total={productos.length}
+        onTodos={() => setElegidos(productos.map((p) => p.id))} onCancelar={() => setElegidos([])} onMover={() => setMoviendo(true)} />}
+      {moviendo && <HojaMover ctx={ctx} productos={aMover} onCerrar={() => setMoviendo(false)}
+        onListo={(n, a) => { setMoviendo(false); setModo('ver'); setElegidos([]); setAviso(`${n} ${n === 1 ? T.producto : T.productos} movid${T.p}${n === 1 ? '' : 's'} a ${a} ✓`) }} />}
       {producto && <HojaProducto p={producto} ctx={ctx} onCerrar={() => setAbierto(null)} />}
     </Hoja>
   )

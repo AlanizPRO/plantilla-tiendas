@@ -9,6 +9,7 @@ import { db } from '../firebase'
 import { prepararFoto } from '../fotos'
 import { ICONOS } from '../iconos'
 import { T } from '../textos'
+import { BarraSeleccion, HojaMover } from './MoverVarios'
 import type { Contexto } from './Tienda'
 
 export const lugarDe = (p: Producto, vitrinas: Vitrina[]) => {
@@ -72,19 +73,35 @@ export default function Inventario({ ctx, nuevo: abrirNuevo }: { ctx: Contexto; 
   const f = useFiltro(ctx.productos)
   const [abierto, setAbierto] = useState<string | null>(null)
   const [nuevo, setNuevo] = useState(!!abrirNuevo && ctx.admin)
+  const [eligiendo, setEligiendo] = useState(false)
+  const [elegidos, setElegidos] = useState<string[]>([])
+  const [moviendo, setMoviendo] = useState(false)
+  const [aviso, setAviso] = useState('')
   const producto = ctx.productos.find((p) => p.id === abierto)
+  // Solo se mueven los que siguen a la vista con el filtro actual.
+  const aMover = f.lista.filter((p) => elegidos.includes(p.id))
+  const salir = () => { setEligiendo(false); setElegidos([]) }
 
   return (
-    <section className="pantalla">
+    <section className={`pantalla ${eligiendo ? 'con-barra' : ''}`}>
       <div className="top">
         <div><h1>{T.Productos}</h1><p className="suave">{f.lista.length} de {ctx.productos.length}</p></div>
-        {ctx.admin && <button className="btn btn-principal" onClick={() => setNuevo(true)}>+ Nuevo</button>}
+        <div className="fila">
+          {ctx.productos.length > 0 && <button className="btn btn-borde" onClick={() => { if (eligiendo) salir(); else { setEligiendo(true); setAviso('') } }}>{eligiendo ? 'Cancelar' : 'Mover varios'}</button>}
+          {ctx.admin && !eligiendo && <button className="btn btn-principal" onClick={() => setNuevo(true)}>+ Nuevo</button>}
+        </div>
       </div>
       <Filtros f={f} estilos={ctx.ajustes.estilos} />
+      {aviso && <p className="ok">{aviso}</p>}
       {f.lista.length === 0 && <Vacio>{ctx.productos.length === 0 ? `Todavía no hay ${T.productos}.${ctx.admin ? ' Toca "+ Nuevo" para agregar con foto.' : ''}` : 'No hay nada con ese filtro.'}</Vacio>}
       <div className="rejilla">
-        {f.lista.map((p) => <Tarjeta key={p.id} p={p} ctx={ctx} onClick={() => setAbierto(p.id)} />)}
+        {f.lista.map((p) => <Tarjeta key={p.id} p={p} ctx={ctx} marcado={eligiendo ? elegidos.includes(p.id) : undefined}
+          onClick={() => eligiendo ? setElegidos((v) => v.includes(p.id) ? v.filter((x) => x !== p.id) : [...v, p.id]) : setAbierto(p.id)} />)}
       </div>
+      {eligiendo && <BarraSeleccion flotante cuantos={aMover.length} total={f.lista.length}
+        onTodos={() => setElegidos(f.lista.map((p) => p.id))} onCancelar={() => setElegidos([])} onMover={() => setMoviendo(true)} />}
+      {moviendo && <HojaMover ctx={ctx} productos={aMover} onCerrar={() => setMoviendo(false)}
+        onListo={(n, a) => { setMoviendo(false); salir(); setAviso(`${n} ${n === 1 ? T.producto : T.productos} movid${T.p}${n === 1 ? '' : 's'} a ${a} ✓`) }} />}
       {nuevo && <FormProducto ctx={ctx} onCerrar={() => setNuevo(false)} />}
       {producto && <HojaProducto p={producto} ctx={ctx} onCerrar={() => setAbierto(null)} />}
     </section>
