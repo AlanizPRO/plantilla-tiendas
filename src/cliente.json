@@ -40,5 +40,6 @@
     "apiKey": "",
     "appId": "",
     "messagingSenderId": ""
-  }
+  },
+  "version": 1
 }
