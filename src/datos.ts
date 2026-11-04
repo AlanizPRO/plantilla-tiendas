@@ -118,7 +118,9 @@ export function mensajeError(e: unknown) {
   if (codigo.includes('unavailable')) return 'Sin conexión. Se guardará cuando vuelva la señal.'
   if (codigo.includes('popup-closed')) return 'Se cerró la ventana de Google antes de terminar.'
   if (codigo.includes('resource-exhausted') || codigo.includes('invalid-argument')) return 'La foto es demasiado grande. Prueba con otra.'
-  return 'Algo salió mal. Intenta de nuevo.'
+  if (codigo.includes('operation-not-allowed') || codigo.includes('configuration-not-found')) return 'Falta activar "Google" en Authentication del Firebase de esta app.'
+  if (codigo.includes('unauthorized-domain')) return 'Este enlace no está autorizado en Authentication → Dominios autorizados.'
+  return `Algo salió mal. Intenta de nuevo.${codigo ? ` (${codigo})` : ''}`
 }
 
 export const iniciales = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('')
