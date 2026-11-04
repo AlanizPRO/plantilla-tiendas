@@ -40,8 +40,18 @@ export default function App() {
   )
 }
 
+// WhatsApp, Instagram y Facebook abren los enlaces en su propio navegador, donde el inicio de sesión de Google falla.
+function navegadorDeApp() {
+  const ua = navigator.userAgent
+  if (/WhatsApp/i.test(ua)) return 'WhatsApp'
+  if (/Instagram/i.test(ua)) return 'Instagram'
+  if (/FBAN|FBAV|FB_IAB/i.test(ua)) return 'Facebook'
+  return ''
+}
+
 function Entrada() {
   const [error, setError] = useState('')
+  const dentroDeOtraApp = navegadorDeApp()
   const invitado = !!invitacionGuardada()
   return (
     <div className="entrada">
@@ -50,6 +60,7 @@ function Entrada() {
         <h1>{cliente.nombreApp}</h1>
         <p className="suave">{cliente.descripcion}{cliente.ciudad ? ` · ${cliente.ciudad}` : ''}</p>
         {invitado && <p className="ok">Tienes una invitación. Entra con tu cuenta de Google para activarla.</p>}
+        {dentroDeOtraApp && <p className="aviso">Abriste el enlace dentro de {dentroDeOtraApp}. Ahí Google no deja entrar: toca los tres puntos o el ícono de compartir y elige <b>Abrir en Safari</b> (o en Chrome).</p>}
         {error && <p className="error">{error}</p>}
         <button className="btn btn-principal btn-ancho" onClick={() => entrar().catch((e) => setError(mensajeError(e)))}>Entrar con Google</button>
       </div>

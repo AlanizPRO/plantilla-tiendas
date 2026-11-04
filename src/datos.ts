@@ -32,6 +32,7 @@ export type Movimiento = { id: string; productoId: string; de: string; a: string
 export type Ajustes = {
   nombreTienda: string; telefono: string; direccion: string; moneda: string
   validezDias: number; garantia: string; notaProforma: string; estilos: string[]
+  inventarioCargado?: boolean
 }
 
 export const AJUSTES_INICIALES: Ajustes = {
@@ -119,6 +120,7 @@ export function mensajeError(e: unknown) {
   if (codigo.includes('popup-closed')) return 'Se cerró la ventana de Google antes de terminar.'
   if (codigo.includes('resource-exhausted') || codigo.includes('invalid-argument')) return 'La foto es demasiado grande. Prueba con otra.'
   if (codigo.includes('operation-not-allowed') || codigo.includes('configuration-not-found')) return 'Falta activar "Google" en Authentication del Firebase de esta app.'
+  if (codigo.includes('missing-initial-state') || codigo.includes('web-storage-unsupported')) return 'Este navegador no deja entrar con Google. Abre el enlace en Safari o Chrome.'
   if (codigo.includes('unauthorized-domain')) return 'Este enlace no está autorizado en Authentication → Dominios autorizados.'
   return `Algo salió mal. Intenta de nuevo.${codigo ? ` (${codigo})` : ''}`
 }
