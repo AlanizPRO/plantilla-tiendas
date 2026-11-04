@@ -12,6 +12,8 @@ export type Producto = {
   id: string; marca: string; modelo: string; codigo?: string; estilo?: string; material?: string; color?: string
   descripcion?: string; precio: number; miniatura?: string; fotos?: string[]
   estado: Estado; vitrinaId?: string; segmento?: string; actualizado?: Timestamp; vendidoEn?: Timestamp
+  // Cómo estaba antes de marcarse vendido, para poder deshacer la venta.
+  estadoAntes?: Estado
 }
 export type Foto = { id: string; datos: string; productoId: string }
 export type ItemSeleccion = { id: string; marca: string; modelo: string; estilo?: string; precio: number; miniatura?: string; fotos?: string[]; descripcion?: string }

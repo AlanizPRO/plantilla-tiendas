@@ -1,4 +1,4 @@
-import { deleteDoc, doc, orderBy, query, serverTimestamp, setDoc, Timestamp, updateDoc, writeBatch } from 'firebase/firestore'
+import { deleteDoc, deleteField, doc, orderBy, query, serverTimestamp, setDoc, Timestamp, updateDoc, writeBatch } from 'firebase/firestore'
 import { useState } from 'react'
 import { tiene } from '../cliente'
 import { Hoja, Vacio } from '../componentes'
@@ -364,8 +364,24 @@ function DetalleProforma({ ctx, p, onCerrar, onEditar }: { ctx: Contexto; p: Pro
       for (const i of conProducto) {
         const prod = ctx.productos.find((x) => x.id === i.productoId)
         if (!prod || prod.estado === 'vendido') continue
-        lote.update(doc(db, 'productos', prod.id), { estado: 'vendido', vendidoEn: serverTimestamp(), actualizado: serverTimestamp() })
+        lote.update(doc(db, 'productos', prod.id), { estado: 'vendido', estadoAntes: prod.estado, vendidoEn: serverTimestamp(), actualizado: serverTimestamp() })
         lote.set(doc(col('movimientos')), { productoId: prod.id, de: lugarDe(prod, ctx.vitrinas), a: `Vendido (${p.numero})`, por: ctx.uid, porNombre: ctx.nombre, fecha: serverTimestamp() })
+      }
+      await lote.commit()
+    } catch (e) { setError(mensajeError(e)) } finally { setTrabajando(false) }
+  }
+  // Deshacer una venta registrada por error: la proforma vuelve a enviada y cada pieza regresa a como estaba.
+  async function deshacerVenta() {
+    if (!confirm('¿Deshacer esta venta? Las piezas vuelven a como estaban antes de venderse.')) return
+    setTrabajando(true); setError('')
+    try {
+      const lote = writeBatch(db)
+      lote.update(doc(db, 'proformas', p.id), { estado: 'enviada', etapa: 'proforma', vendidaEn: deleteField(), etapaCambio: serverTimestamp() })
+      for (const i of p.items.filter((x) => x.productoId)) {
+        const prod = ctx.productos.find((x) => x.id === i.productoId)
+        if (!prod || prod.estado !== 'vendido') continue
+        lote.update(doc(db, 'productos', prod.id), { estado: prod.estadoAntes ?? 'exhibicion', estadoAntes: deleteField(), vendidoEn: deleteField(), actualizado: serverTimestamp() })
+        lote.set(doc(col('movimientos')), { productoId: prod.id, de: `Vendido (${p.numero})`, a: 'Venta deshecha', por: ctx.uid, porNombre: ctx.nombre, fecha: serverTimestamp() })
       }
       await lote.commit()
     } catch (e) { setError(mensajeError(e)) } finally { setTrabajando(false) }
@@ -399,6 +415,11 @@ function DetalleProforma({ ctx, p, onCerrar, onEditar }: { ctx: Contexto; p: Pro
         <a className="btn btn-whatsapp" href={enlaceWhatsApp(p.cliente.telefono, texto)} target="_blank" rel="noreferrer" onClick={marcarEnviada}>{ICONOS.whatsapp}Enviar por WhatsApp</a>
         <a className="btn btn-borde" href={url} target="_blank" rel="noreferrer" onClick={marcarEnviada}>{ICONOS.imprimir}Ver e imprimir</a>
       </div>
+      {p.estado === 'vendida' && ctx.admin && (
+        <div className="fila">
+          <button className="btn btn-borde" disabled={trabajando} onClick={deshacerVenta}>Deshacer venta</button>
+        </div>
+      )}
       {abierta && (
         <div className="fila">
           <button className="btn btn-principal" disabled={trabajando} onClick={vender}>Se vendió</button>

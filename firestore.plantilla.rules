@@ -34,7 +34,7 @@ service cloud.firestore {
       allow create, delete: if esAdmin();
       // Los vendedores pueden mover, apartar, vender y cambiar fotos; el dueño cambia todo.
       allow update: if esAdmin() || (esVendedor()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'vitrinaId', 'segmento', 'actualizado', 'vendidoEn', 'fotos', 'miniatura']));
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'vitrinaId', 'segmento', 'actualizado', 'vendidoEn', 'fotos', 'miniatura', 'estadoAntes']));
     }
 
     // Costos aparte: solo el dueño.

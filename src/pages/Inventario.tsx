@@ -1,4 +1,4 @@
-import { addDoc, deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
+import { addDoc, deleteDoc, deleteField, doc, getDoc, serverTimestamp, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
 import { useEffect, useMemo, useState } from 'react'
 import { tiene } from '../cliente'
 import { Hoja, Vacio } from '../componentes'
@@ -189,7 +189,9 @@ export function HojaProducto({ p, ctx, onCerrar }: { p: Producto; ctx: Contexto;
     const despues = lugarDe({ ...p, ...v }, ctx.vitrinas)
     try {
       const lote = writeBatch(db)
-      lote.update(doc(db, 'productos', p.id), { ...v, actualizado: serverTimestamp(), ...(v.estado === 'vendido' ? { vendidoEn: serverTimestamp() } : {}) })
+      const venta = v.estado === 'vendido' && p.estado !== 'vendido' ? { vendidoEn: serverTimestamp(), estadoAntes: p.estado }
+        : v.estado !== 'vendido' && p.estado === 'vendido' ? { vendidoEn: deleteField(), estadoAntes: deleteField() } : {}
+      lote.update(doc(db, 'productos', p.id), { ...v, actualizado: serverTimestamp(), ...venta })
       lote.set(doc(col('movimientos')), { productoId: p.id, de: antes, a: despues, por: ctx.uid, porNombre: ctx.nombre, fecha: serverTimestamp() })
       await lote.commit()
     } catch (e) { setError(mensajeError(e)) }
