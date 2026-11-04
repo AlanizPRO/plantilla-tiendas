@@ -1,11 +1,12 @@
 import { doc, setDoc } from 'firebase/firestore'
 import { useState } from 'react'
-import { mensajeError, type Ajustes as TAjustes } from '../datos'
+import { quitarRepetidos, repetidosDelExcel } from '../cargaInicial'
+import { mensajeError, type Ajustes as TAjustes, type Producto } from '../datos'
 import { db } from '../firebase'
 import { T } from '../textos'
 import BotonRespaldo from './BotonRespaldo'
 
-export default function Ajustes({ ajustes }: { ajustes: TAjustes }) {
+export default function Ajustes({ ajustes, productos }: { ajustes: TAjustes; productos: Producto[] }) {
   const [a, setA] = useState<TAjustes>(ajustes)
   const [nuevo, setNuevo] = useState('')
   const [estado, setEstado] = useState<'' | 'guardando' | 'ok' | string>('')
@@ -63,11 +64,31 @@ export default function Ajustes({ ajustes }: { ajustes: TAjustes }) {
       {estado === 'ok' && <p className="ok">Guardado.</p>}
       {estado && estado !== 'ok' && estado !== 'guardando' && <p className="error">{estado}</p>}
       <button className="btn btn-principal" disabled={estado === 'guardando'} onClick={guardar}>{estado === 'guardando' ? 'Guardando…' : 'Guardar'}</button>
+      <Repetidos productos={productos} />
       <BotonRespaldo hojas={[
         { coleccion: 'productos', nombre: T.Productos }, { coleccion: 'costos', nombre: 'Costos' }, { coleccion: 'vitrinas', nombre: T.Ubicaciones },
         { coleccion: 'proformas', nombre: 'Proformas' }, { coleccion: 'selecciones', nombre: 'Selecciones' }, { coleccion: 'movimientos', nombre: 'Movimientos' },
         { coleccion: 'usuarios', nombre: 'Vendedores' },
       ]} />
     </section>
+  )
+}
+
+function Repetidos({ productos }: { productos: Producto[] }) {
+  const [estado, setEstado] = useState('')
+  const sobran = repetidosDelExcel(productos)
+  if (!sobran.length && !estado) return null
+  async function quitar() {
+    if (!confirm(`¿Quitar ${sobran.length} ${T.productos} repetidos? Quedan los que dice el Excel.`)) return
+    setEstado('quitando')
+    try { setEstado(`Listo: se quitaron ${await quitarRepetidos(sobran)} repetidos.`) } catch (e) { setEstado(mensajeError(e)) }
+  }
+  return (
+    <div className="panel">
+      <h3>Inventario repetido</h3>
+      {sobran.length > 0 && <p className="aviso">El inventario del Excel se cargó más de una vez: hay {sobran.length} {T.productos} de más. Se quitan los repetidos (primero los que siguen en bodega) y quedan los que dice el Excel.</p>}
+      {estado && estado !== 'quitando' && <p className="ok">{estado}</p>}
+      {sobran.length > 0 && <button className="btn btn-rosa" disabled={estado === 'quitando'} onClick={quitar}>{estado === 'quitando' ? 'Quitando…' : `Quitar ${sobran.length} repetidos`}</button>}
+    </div>
   )
 }
