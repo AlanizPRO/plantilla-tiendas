@@ -27,6 +27,8 @@ export type Proforma = {
   descuento: number; moneda: string; validezDias: number; garantia: string; nota: string
   estado: 'borrador' | 'enviada' | 'vendida' | 'anulada'; seleccionId?: string
   vendedorUid: string; vendedorNombre: string; creada?: Timestamp; vendidaEn?: Timestamp
+  /** Etapa del tablero: 'proforma' | 'aceptada' | 'reparto' | 'finalizada' */
+  etapa?: 'proforma' | 'aceptada' | 'reparto' | 'finalizada'
 }
 export type Movimiento = { id: string; productoId: string; de: string; a: string; por: string; fecha?: Timestamp; enGrupo?: number }
 export type Ajustes = {
