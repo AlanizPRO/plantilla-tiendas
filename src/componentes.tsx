@@ -3,7 +3,10 @@ import { cliente } from './cliente'
 import { iniciales } from './datos'
 import { ICONOS } from './iconos'
 
+// Logotipo de la empresa (lo sube el dueño en la super app). Si no hay, se muestran las iniciales.
 export function Logo() {
+  const logo = (cliente as { proforma?: { logo?: string } }).proforma?.logo
+  if (logo?.startsWith('data:image/')) return <img className="logo" src={logo} alt="" />
   return <div className="logo" aria-hidden="true">{iniciales(cliente.nombreApp)}</div>
 }
 
