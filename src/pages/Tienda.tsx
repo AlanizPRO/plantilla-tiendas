@@ -96,7 +96,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
 function Opcion({ icono, titulo, texto, onClick }: { icono: string; titulo: string; texto: string; onClick: () => void }) {
   return (
     <button className="fila-item" onClick={onClick}>
-      <span className="ini" style={{ background: 'var(--principal)' }}>{ICONOS[icono]}</span>
+      <span className="ini" style={{ background: 'var(--principal)', color: '#1b2526' }}>{ICONOS[icono]}</span>
       <div><b>{titulo}</b><small>{texto}</small></div>
       <span aria-hidden="true">›</span>
     </button>
