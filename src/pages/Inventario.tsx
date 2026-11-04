@@ -132,9 +132,16 @@ export function Galeria({ ids, miniatura }: { ids?: string[]; miniatura?: string
   const [i, setI] = useState(0)
   const actual = ids?.[i]
   const src = (actual && fotos[actual]) || (i === 0 ? miniatura : undefined)
+  const [ampliada, setAmpliada] = useState(false)
   return (
     <div className="galeria">
-      {src ? <img className="foto-grande" src={src} alt="" /> : <div className="foto-grande sin-foto">{ICONOS.camara}</div>}
+      {src ? <img className="foto-grande" src={src} alt="" role="button" tabIndex={0} title="Toca para ampliar" onClick={() => setAmpliada(true)} onKeyDown={(e) => { if (e.key === 'Enter') setAmpliada(true) }} /> : <div className="foto-grande sin-foto">{ICONOS.camara}</div>}
+      {ampliada && src && (
+        <div className="foto-ampliada" role="dialog" aria-label="Foto ampliada" onClick={() => setAmpliada(false)}>
+          <img src={src} alt="" />
+          <button className="btn btn-principal" onClick={() => setAmpliada(false)}>Cerrar</button>
+        </div>
+      )}
       {(ids?.length ?? 0) > 1 && (
         <div className="fila">
           {ids!.map((id, j) => (
