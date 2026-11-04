@@ -10,12 +10,13 @@ import { salir } from '../sesion'
 import { T } from '../textos'
 import Ajustes from './Ajustes'
 import Equipo from './Equipo'
+import Gastos from './Gastos'
 import Inicio from './Inicio'
 import Inventario from './Inventario'
 import Ventas from './Ventas'
 import Vitrinas from './Vitrinas'
 
-type Vista = 'inicio' | 'vitrinas' | 'inventario' | 'ventas' | 'mas' | 'equipo' | 'ajustes'
+type Vista = 'inicio' | 'vitrinas' | 'inventario' | 'ventas' | 'mas' | 'equipo' | 'ajustes' | 'gastos'
 
 // Lo que comparten todas las pantallas de la tienda.
 export type Contexto = {
@@ -54,7 +55,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
     ...(tiene('selecciones') || tiene('proformas') ? [{ id: 'ventas', nombre: 'Ventas', icono: 'ventas', punto: respondidas.length > 0 }] : []),
     { id: 'mas', nombre: 'Más', icono: 'mas' },
   ]
-  const actual = ['equipo', 'ajustes'].includes(vista) ? 'mas' : vista
+  const actual = ['equipo', 'ajustes', 'gastos'].includes(vista) ? 'mas' : vista
 
   return (
     <>
@@ -67,12 +68,14 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
           {vista === 'inventario' && <Inventario key={accion} ctx={ctx} nuevo={accion === 'nuevo'} />}
           {vista === 'ventas' && <Ventas key={accion} ctx={ctx} selecciones={selecciones} accion={accion} />}
           {vista === 'equipo' && admin && <Equipo />}
+          {vista === 'gastos' && admin && <Gastos ctx={ctx} />}
           {vista === 'ajustes' && admin && <Ajustes key={ajustesCargados ? 'cargado' : 'inicial'} ajustes={ajustes} productos={productos} vitrinas={vitrinas} />}
           {vista === 'mas' && (
             <section className="pantalla">
               <h1>Más</h1>
               <div className="lista">
                 {admin && <Opcion icono="equipo" titulo="Vendedores" texto="Invitar y quitar vendedores" onClick={() => ir('equipo')} />}
+                {admin && <Opcion icono="inicio" titulo="Gastos y ganancia" texto="Renta, salarios y ganancia real del mes" onClick={() => ir('gastos')} />}
                 {admin && <Opcion icono="ajustes" titulo="Ajustes" texto="Datos de la tienda, estilos y proformas" onClick={() => ir('ajustes')} />}
               </div>
               <p className="suave chico">Entraste como <b>{usuario.email}</b>{admin ? ' (dueño)' : ''}.</p>
