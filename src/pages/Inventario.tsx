@@ -8,6 +8,7 @@ import {
 import { db } from '../firebase'
 import { prepararFoto } from '../fotos'
 import { ICONOS } from '../iconos'
+import Camara from '../camara'
 import { T } from '../textos'
 import { BarraSeleccion, HojaMover } from './MoverVarios'
 import type { Contexto } from './Tienda'
@@ -247,7 +248,8 @@ function FormProducto({ ctx, p, onCerrar }: { ctx: Contexto; p?: Producto; onCer
   const [error, setError] = useState('')
   const poner = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }))
 
-  async function agregarFotos(archivos: FileList | null) {
+  const [camara, setCamara] = useState(false)
+  async function agregarFotos(archivos: FileList | File[] | null) {
     if (!archivos?.length) return
     setProcesando(true); setError('')
     try {
@@ -295,10 +297,14 @@ function FormProducto({ ctx, p, onCerrar }: { ctx: Contexto; p?: Producto; onCer
             <button aria-label="Quitar foto" onClick={() => setFotosNuevas((x) => x.filter((_, j) => j !== i))}>×</button></div>
         ))}
         {fotosViejas.length + fotosNuevas.length < 6 && (
-          <label className="foto-mini agregar" htmlFor="p-fotos">{procesando ? '…' : ICONOS.camara}<span>Foto</span>
+          <button type="button" className="foto-mini agregar" onClick={() => setCamara(true)} disabled={procesando}>{procesando ? '…' : ICONOS.camara}<span>Tomar</span></button>
+        )}
+        {fotosViejas.length + fotosNuevas.length < 6 && (
+          <label className="foto-mini agregar" htmlFor="p-fotos">{ICONOS.camara}<span>Galería</span>
             <input id="p-fotos" type="file" accept="image/*" multiple hidden onChange={(e) => { agregarFotos(e.target.files); e.target.value = '' }} />
           </label>
         )}
+        {camara && <Camara onFoto={(f) => agregarFotos([f])} onCerrar={() => setCamara(false)} />}
       </div>
       <div className="campos">
         <label className="campo" htmlFor="p-marca">Marca<input id="p-marca" value={f.marca} onChange={(e) => poner('marca', e.target.value)} placeholder="Ej. Casio" /></label>
@@ -333,7 +339,8 @@ function FotosProducto({ p, onListo }: { p: Producto; onListo: () => void }) {
   const [error, setError] = useState('')
   const total = viejas.length + nuevas.length
 
-  async function agregar(archivos: FileList | null) {
+  const [camara, setCamara] = useState(false)
+  async function agregar(archivos: FileList | File[] | null) {
     if (!archivos?.length) return
     setProcesando(true); setError('')
     try {
@@ -372,11 +379,15 @@ function FotosProducto({ p, onListo }: { p: Producto; onListo: () => void }) {
             <button aria-label="Quitar foto" onClick={() => setNuevas((x) => x.filter((_, j) => j !== i))}>×</button></div>
         ))}
         {total < 6 && (
-          <label className="foto-mini agregar" htmlFor="v-fotos">{procesando ? '…' : ICONOS.camara}<span>Foto</span>
-            <input id="v-fotos" type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => { agregar(e.target.files); e.target.value = '' }} />
+          <button type="button" className="foto-mini agregar" onClick={() => setCamara(true)} disabled={procesando}>{procesando ? '…' : ICONOS.camara}<span>Tomar</span></button>
+        )}
+        {total < 6 && (
+          <label className="foto-mini agregar" htmlFor="v-fotos">{ICONOS.camara}<span>Galería</span>
+            <input id="v-fotos" type="file" accept="image/*" multiple hidden onChange={(e) => { agregar(e.target.files); e.target.value = '' }} />
           </label>
         )}
       </div>
+      {camara && <Camara onFoto={(f) => agregar([f])} onCerrar={() => setCamara(false)} />}
       {error && <p className="error">{error}</p>}
       <button className="btn btn-principal" disabled={guardando || procesando} onClick={guardar}>{guardando ? 'Guardando…' : 'Guardar fotos'}</button>
     </div>
