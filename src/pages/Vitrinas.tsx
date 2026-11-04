@@ -19,15 +19,15 @@ export default function Vitrinas({ ctx }: { ctx: Contexto }) {
     <section className="pantalla">
       <div className="top">
         <div><h1>{T.Ubicaciones}</h1><p className="suave">{enExhibicion.length} {T.productos} en exhibición</p></div>
-        {ctx.admin && <button className="btn btn-principal" onClick={() => setEditar('nueva')}>+ {T.Ubicacion}</button>}
+        <button className="btn btn-principal" onClick={() => setEditar('nueva')}>+ {T.Ubicacion}</button>
       </div>
-      {ctx.vitrinas.length === 0 && <Vacio>Todavía no hay {T.ubicaciones}.{ctx.admin ? ` Toca "+ ${T.Ubicacion}" para crear la primera con sus segmentos (A, B…).` : ''}</Vacio>}
+      {ctx.vitrinas.length === 0 && <Vacio>Todavía no hay {T.ubicaciones}. Toca "+ {T.Ubicacion}" para crear la primera con sus segmentos (A, B…).</Vacio>}
       {ctx.vitrinas.map((v) => (
         <div key={v.id} className="panel">
           <div className="fila" style={{ justifyContent: 'space-between' }}>
             <h3>{v.nombre}</h3>
             <div className="fila"><span className="pill p-gris">{cuantos(v.id)} en total</span>
-              {ctx.admin && <button className="btn btn-borde btn-chico" onClick={() => setEditar(v)}>Editar</button>}</div>
+              <button className="btn btn-borde btn-chico" onClick={() => setEditar(v)}>Editar</button></div>
           </div>
           <div className="segmentos">
             {(v.segmentos.length ? v.segmentos : ['']).map((s) => {

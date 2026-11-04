@@ -22,9 +22,11 @@ service cloud.firestore {
       allow write: if esAdmin();
     }
 
+    // El equipo crea vitrinas y segmentos; solo el dueño las borra.
     match /vitrinas/{id} {
       allow read: if esEquipo();
-      allow write: if esAdmin();
+      allow create, update: if esEquipo();
+      allow delete: if esAdmin();
     }
 
     match /productos/{id} {
