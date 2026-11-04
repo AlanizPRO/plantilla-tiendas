@@ -1,7 +1,7 @@
 import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut, type User } from 'firebase/auth'
 import { doc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
-import { correoAdmin } from './cliente'
+import { correosAdmin } from './cliente'
 import { auth, db, google } from './firebase'
 
 export type Rol = 'cargando' | 'fuera' | 'admin' | 'vendedor' | 'sin-rol'
@@ -61,7 +61,7 @@ export function useSesion(): Sesion & { errorInvitacion: string; nombre: string;
 
   useEffect(() => onAuthStateChanged(auth, setUsuario), [])
 
-  const esAdmin = !!usuario && usuario.emailVerified && (usuario.email ?? '').toLowerCase() === correoAdmin
+  const esAdmin = !!usuario && usuario.emailVerified && correosAdmin.includes((usuario.email ?? '').toLowerCase())
 
   useEffect(() => {
     if (!usuario || esAdmin) { setPerfil(undefined); return }

@@ -4,6 +4,7 @@
   "descripcion": "Relojería",
   "ciudad": "Managua",
   "correoAdmin": "correo-del-dueno@gmail.com",
+  "correosAdmin": [],
   "colorPrincipal": "#1f2a44",
   "colorAcento": "#b9822a",
   "colorFondo": "#f5f3ee",
