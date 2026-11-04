@@ -69,6 +69,9 @@ export function Filtros({ f, estilos, conEstados = true }: { f: ReturnType<typeo
   )
 }
 
+// Lo que vale lo que todavía no se ha vendido: precio de venta de cada pieza (una pieza = una fila), sin costos.
+export const valorInventario = (productos: Producto[]) => productos.filter((p) => p.estado !== 'vendido').reduce((s, p) => s + (Number(p.precio) || 0), 0)
+
 export default function Inventario({ ctx, nuevo: abrirNuevo }: { ctx: Contexto; nuevo?: boolean }) {
   const f = useFiltro(ctx.productos)
   const [abierto, setAbierto] = useState<string | null>(null)
@@ -85,7 +88,8 @@ export default function Inventario({ ctx, nuevo: abrirNuevo }: { ctx: Contexto; 
   return (
     <section className={`pantalla ${eligiendo ? 'con-barra' : ''}`}>
       <div className="top">
-        <div><h1>{T.Productos}</h1><p className="suave">{f.lista.length} de {ctx.productos.length}</p></div>
+        <div><h1>{T.Productos}</h1><p className="suave">{f.lista.length} de {ctx.productos.length}</p>
+          {ctx.admin && <p className="suave chico">Valor del inventario (solo tú lo ves): <b>{dinero(valorInventario(ctx.productos), ctx.ajustes.moneda)}</b></p>}</div>
         <div className="fila">
           {ctx.productos.length > 0 && <button className="btn btn-borde" onClick={() => { if (eligiendo) salir(); else { setEligiendo(true); setAviso('') } }}>{eligiendo ? 'Cancelar' : 'Mover varios'}</button>}
           {ctx.admin && !eligiendo && <button className="btn btn-principal" onClick={() => setNuevo(true)}>+ Nuevo</button>}
