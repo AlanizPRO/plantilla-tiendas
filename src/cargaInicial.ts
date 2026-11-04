@@ -74,3 +74,10 @@ export async function quitarRepetidos(productos: Producto[]) {
   }
   return productos.length
 }
+
+// Piezas que vinieron del Excel y que todavía no se tocaron (sin fotos y en bodega). Sirve para volver a cargarlo.
+export function piezasDelExcelSinTocar(productos: Producto[]): Producto[] {
+  const nombres = new Set(inventarioInicial().map((a) => a.nombre!.trim()))
+  return productos.filter((p) => !(p.fotos?.length) && p.estado === 'bodega'
+    && ((p as { origen?: string }).origen === 'excel' || nombres.has(p.modelo)))
+}

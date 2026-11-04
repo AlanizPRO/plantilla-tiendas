@@ -67,7 +67,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
           {vista === 'inventario' && <Inventario key={accion} ctx={ctx} nuevo={accion === 'nuevo'} />}
           {vista === 'ventas' && <Ventas key={accion} ctx={ctx} selecciones={selecciones} accion={accion} />}
           {vista === 'equipo' && admin && <Equipo />}
-          {vista === 'ajustes' && admin && <Ajustes key={ajustesCargados ? 'cargado' : 'inicial'} ajustes={ajustes} productos={productos} />}
+          {vista === 'ajustes' && admin && <Ajustes key={ajustesCargados ? 'cargado' : 'inicial'} ajustes={ajustes} productos={productos} vitrinas={vitrinas} />}
           {vista === 'mas' && (
             <section className="pantalla">
               <h1>Más</h1>

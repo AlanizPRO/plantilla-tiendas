@@ -1,12 +1,12 @@
 import { doc, setDoc } from 'firebase/firestore'
 import { useState } from 'react'
-import { quitarRepetidos, repetidosDelExcel } from '../cargaInicial'
-import { mensajeError, type Ajustes as TAjustes, type Producto } from '../datos'
+import { cargarInventarioInicial, inventarioInicial, marcarCargado, piezasDelExcelSinTocar, quitarRepetidos, repetidosDelExcel } from '../cargaInicial'
+import { mensajeError, type Ajustes as TAjustes, type Producto, type Vitrina } from '../datos'
 import { db } from '../firebase'
 import { T } from '../textos'
 import BotonRespaldo from './BotonRespaldo'
 
-export default function Ajustes({ ajustes, productos }: { ajustes: TAjustes; productos: Producto[] }) {
+export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAjustes; productos: Producto[]; vitrinas: Vitrina[] }) {
   const [a, setA] = useState<TAjustes>(ajustes)
   const [nuevo, setNuevo] = useState('')
   const [estado, setEstado] = useState<'' | 'guardando' | 'ok' | string>('')
@@ -65,6 +65,7 @@ export default function Ajustes({ ajustes, productos }: { ajustes: TAjustes; pro
       {estado && estado !== 'ok' && estado !== 'guardando' && <p className="error">{estado}</p>}
       <button className="btn btn-principal" disabled={estado === 'guardando'} onClick={guardar}>{estado === 'guardando' ? 'Guardando…' : 'Guardar'}</button>
       <Repetidos productos={productos} />
+      <RecargarExcel ajustes={ajustes} productos={productos} vitrinas={vitrinas} />
       <BotonRespaldo hojas={[
         { coleccion: 'productos', nombre: T.Productos }, { coleccion: 'costos', nombre: 'Costos' }, { coleccion: 'vitrinas', nombre: T.Ubicaciones },
         { coleccion: 'proformas', nombre: 'Proformas' }, { coleccion: 'selecciones', nombre: 'Selecciones' }, { coleccion: 'movimientos', nombre: 'Movimientos' },
@@ -89,6 +90,33 @@ function Repetidos({ productos }: { productos: Producto[] }) {
       {sobran.length > 0 && <p className="aviso">El inventario del Excel se cargó más de una vez: hay {sobran.length} {T.productos} de más. Se quitan los repetidos (primero los que siguen en bodega) y quedan los que dice el Excel.</p>}
       {estado && estado !== 'quitando' && <p className="ok">{estado}</p>}
       {sobran.length > 0 && <button className="btn btn-rosa" disabled={estado === 'quitando'} onClick={quitar}>{estado === 'quitando' ? 'Quitando…' : `Quitar ${sobran.length} repetidos`}</button>}
+    </div>
+  )
+}
+
+// Vuelve a cargar el inventario del Excel (por ejemplo, si los precios salieron mal).
+// Quita solo las piezas del Excel que siguen sin tocar: sin fotos y en bodega.
+function RecargarExcel({ ajustes, productos, vitrinas }: { ajustes: TAjustes; productos: Producto[]; vitrinas: Vitrina[] }) {
+  const [estado, setEstado] = useState('')
+  const filas = inventarioInicial().length
+  if (!filas) return null
+  const viejas = piezasDelExcelSinTocar(productos)
+  async function recargar() {
+    if (!confirm(`¿Volver a cargar el inventario del Excel? Se quitan ${viejas.length} ${T.productos} del Excel que siguen en bodega y sin fotos, y se cargan de nuevo. Los que ya moviste o tienen fotos se quedan.`)) return
+    setEstado('cargando')
+    try {
+      await quitarRepetidos(viejas)
+      const n = await cargarInventarioInicial(ajustes, vitrinas)
+      await marcarCargado()
+      setEstado(`Listo: se cargaron ${n} ${T.productos} del Excel.`)
+    } catch (e) { setEstado(mensajeError(e)) }
+  }
+  return (
+    <div className="panel">
+      <h3>Inventario del Excel</h3>
+      <p className="suave chico">El Excel trae {filas} filas. Si algo salió mal (precios, repetidos), vuelve a cargarlo. Antes, si cambiaste el Excel, súbelo otra vez en la Super App y actualiza la app.</p>
+      {estado && estado !== 'cargando' && <p className="ok">{estado}</p>}
+      <button className="btn btn-borde" disabled={estado === 'cargando'} onClick={recargar}>{estado === 'cargando' ? 'Cargando…' : 'Volver a cargar el inventario del Excel'}</button>
     </div>
   )
 }
