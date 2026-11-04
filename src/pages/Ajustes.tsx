@@ -1,7 +1,6 @@
 import { doc, setDoc } from 'firebase/firestore'
 import { useState } from 'react'
 import { cargarInventarioInicial, inventarioInicial, marcarCargado, piezasDelExcelSinTocar, quitarRepetidos, repetidosDelExcel } from '../cargaInicial'
-import { cliente } from '../cliente'
 import { mensajeError, type Ajustes as TAjustes, type Producto, type Vitrina } from '../datos'
 import { db } from '../firebase'
 import { T } from '../textos'
@@ -29,7 +28,6 @@ export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAj
   return (
     <section className="pantalla">
       <div><h1>Ajustes</h1><p className="suave">Estos datos salen en los enlaces y proformas que ve el cliente.</p></div>
-      <p className="suave chico">Versión de la app: <b>{(cliente as { version?: number }).version ?? 1}</b></p>
       <div className="panel">
         <h3>La tienda</h3>
         <div className="campos">

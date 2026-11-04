@@ -2,7 +2,7 @@ import type { User } from 'firebase/auth'
 import { orderBy, query } from 'firebase/firestore'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { cargarInventarioInicial, inventarioInicial, marcarCargado } from '../cargaInicial'
-import { tiene } from '../cliente'
+import { cliente, tiene } from '../cliente'
 import { Barra, Encabezado, type Pestana } from '../componentes'
 import { col, todos, useAjustesConEstado, useLista, type Ajustes as TAjustes, type Producto, type Seleccion, type Vitrina } from '../datos'
 import { ICONOS } from '../iconos'
@@ -73,6 +73,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
           {vista === 'mas' && (
             <section className="pantalla">
               <h1>Más</h1>
+              <p className="suave chico">Versión de la app: <b>{(cliente as { version?: number }).version ?? 1}</b></p>
               <div className="lista">
                 {admin && <Opcion icono="equipo" titulo="Vendedores" texto="Invitar y quitar vendedores" onClick={() => ir('equipo')} />}
                 {admin && <Opcion icono="inicio" titulo="Gastos y ganancia" texto="Renta, salarios y ganancia real del mes" onClick={() => ir('gastos')} />}
