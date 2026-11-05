@@ -86,7 +86,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
           {vista === 'mas' && (
             <section className="pantalla">
               <h1>Más</h1>
-              <p className="suave chico">Versión de la app: <b>{(cliente as { version?: number }).version ?? 1}</b></p>
+              <p className="suave chico">Versión de la app: <b>{versionBonita((cliente as { version?: number }).version ?? 1)}</b></p>
               {!admin && <CambiarFoto uid={ctx.uid} foto={miPerfil?.foto} />}
               <div className="lista">
                 {admin && <Opcion icono="equipo" titulo="Colaboradores" texto="Invitar y quitar colaboradores" onClick={() => ir('equipo')} />}
@@ -106,6 +106,11 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
       <Barra pestanas={pestanas} actual={actual} onIr={(v) => ir(v)} />
     </>
   )
+}
+
+// El número guardado (30, 31...) se muestra como v3.0, v3.1.
+function versionBonita(n: number) {
+  return `v${Math.floor(n / 10)}.${n % 10}`
 }
 
 function Opcion({ icono, titulo, texto, onClick }: { icono: string; titulo: string; texto: string; onClick: () => void }) {
