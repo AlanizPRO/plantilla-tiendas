@@ -8,6 +8,7 @@ import {
 } from '../datos'
 import { db } from '../firebase'
 import { ICONOS } from '../iconos'
+import { AvisarDueno } from '../avisoVenta'
 import { T } from '../textos'
 import { Filtros, lugarDe, Tarjeta, useFiltro } from './Inventario'
 import type { Contexto } from './Tienda'
@@ -347,6 +348,7 @@ function EditorProforma({ ctx, p, desde, onCerrar, onGuardada }: { ctx: Contexto
 function DetalleProforma({ ctx, p, onCerrar, onEditar }: { ctx: Contexto; p: Proforma; onCerrar: () => void; onEditar: () => void }) {
   const [error, setError] = useState('')
   const [trabajando, setTrabajando] = useState(false)
+  const [aviso, setAviso] = useState('')
   const url = enlace('p', p.id)
   const abierta = p.estado === 'borrador' || p.estado === 'enviada'
   const texto = `Hola ${(p.cliente.nombre || '').split(' ')[0]}, te comparto la proforma ${p.numero} de ${ctx.ajustes.nombreTienda} por ${dinero(totalProforma(p), p.moneda)}: ${url}`
@@ -368,6 +370,10 @@ function DetalleProforma({ ctx, p, onCerrar, onEditar }: { ctx: Contexto; p: Pro
         lote.set(doc(col('movimientos')), { productoId: prod.id, de: lugarDe(prod, ctx.vitrinas), a: `Vendido (${p.numero})`, por: ctx.uid, porNombre: ctx.nombre, fecha: serverTimestamp() })
       }
       await lote.commit()
+      if (!ctx.admin) {
+        const piezas = p.items.map((i) => `${i.cantidad > 1 ? `${i.cantidad} × ` : ''}${i.descripcion}`).join(', ')
+        setAviso(`Venta en ${ctx.ajustes.nombreTienda}: ${ctx.nombre || 'un vendedor'} vendió ${piezas} a ${p.cliente.nombre || 'un cliente'} por ${dinero(totalProforma(p), p.moneda)} (proforma ${p.numero}).`)
+      }
     } catch (e) { setError(mensajeError(e)) } finally { setTrabajando(false) }
   }
   // Deshacer una venta registrada por error: la proforma vuelve a enviada y cada pieza regresa a como estaba.
@@ -411,6 +417,7 @@ function DetalleProforma({ ctx, p, onCerrar, onEditar }: { ctx: Contexto; p: Pro
       </div>
       {abierta && vendidosYa.length > 0 && <p className="aviso">Ojo: {vendidosYa.map((i) => i.descripcion).join(', ')} ya aparece como vendido.</p>}
       {error && <p className="error">{error}</p>}
+      {aviso && <AvisarDueno ajustes={ctx.ajustes} texto={aviso} onListo={() => setAviso('')} />}
       <div className="fila">
         <a className="btn btn-whatsapp" href={enlaceWhatsApp(p.cliente.telefono, texto)} target="_blank" rel="noreferrer" onClick={marcarEnviada}>{ICONOS.whatsapp}Enviar por WhatsApp</a>
         <a className="btn btn-borde" href={url} target="_blank" rel="noreferrer" onClick={marcarEnviada}>{ICONOS.imprimir}Ver e imprimir</a>

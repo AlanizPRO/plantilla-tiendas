@@ -64,6 +64,11 @@ export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAj
         <label className="campo" htmlFor="a-nota">Nota al pie<textarea id="a-nota" value={a.notaProforma} onChange={(e) => poner('notaProforma', e.target.value)} placeholder="Ej. Aceptamos tarjeta y transferencia." /></label>
       </div>
       <div className="panel">
+        <h3>Aviso de ventas</h3>
+        <p className="suave chico">Cuando un vendedor registra una venta, le sale un botón para avisarte por WhatsApp con el mensaje ya escrito. Si lo dejas vacío, se usa el teléfono de la tienda.</p>
+        <label className="campo" htmlFor="a-avisos">WhatsApp del dueño<input id="a-avisos" type="tel" inputMode="tel" value={a.whatsappAvisos ?? ''} onChange={(e) => poner('whatsappAvisos', e.target.value)} placeholder={a.telefono || 'Ej. 8888 8888'} /></label>
+      </div>
+      <div className="panel">
         <h3>Calidad de las fotos</h3>
         <p className="suave chico">Solo cambia las fotos nuevas. Más calidad se ve mejor al hacer zoom, pero caben menos fotos en el plan gratis.</p>
         <label className="campo" htmlFor="a-fotokb">Peso de cada foto

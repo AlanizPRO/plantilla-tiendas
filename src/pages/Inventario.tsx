@@ -10,6 +10,7 @@ import { db } from '../firebase'
 import { prepararFoto } from '../fotos'
 import { ICONOS } from '../iconos'
 import Camara from '../camara'
+import { AvisarDueno } from '../avisoVenta'
 import { T } from '../textos'
 import { BarraSeleccion, HojaMover } from './MoverVarios'
 import type { Contexto } from './Tienda'
@@ -309,6 +310,7 @@ function SelectorLugar({ ctx, estado, vitrinaId, segmento, onCambiar }: {
 export function HojaProducto({ p, ctx, onCerrar }: { p: Producto; ctx: Contexto; onCerrar: () => void }) {
   const [editando, setEditando] = useState(false)
   const [error, setError] = useState('')
+  const [aviso, setAviso] = useState('')
   const costo = useDoc<{ costo: number }>(ctx.admin ? `costos/${p.id}` : null)
   if (editando) return <FormProducto ctx={ctx} p={p} onCerrar={() => setEditando(false)} />
 
@@ -323,6 +325,9 @@ export function HojaProducto({ p, ctx, onCerrar }: { p: Producto; ctx: Contexto;
       lote.update(doc(db, 'productos', p.id), { ...v, actualizado: serverTimestamp(), ...venta })
       lote.set(doc(col('movimientos')), { productoId: p.id, de: antes, a: despues, por: ctx.uid, porNombre: ctx.nombre, fecha: serverTimestamp() })
       await lote.commit()
+      if (!ctx.admin && v.estado === 'vendido' && p.estado !== 'vendido') {
+        setAviso(`Venta en ${ctx.ajustes.nombreTienda}: ${ctx.nombre || 'un vendedor'} vendió ${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''} por ${dinero(p.precio, ctx.ajustes.moneda)}.`)
+      } else setAviso('')
     } catch (e) { setError(mensajeError(e)) }
   }
   async function borrar() {
@@ -349,6 +354,7 @@ export function HojaProducto({ p, ctx, onCerrar }: { p: Producto; ctx: Contexto;
       </div>
       <SelectorLugar ctx={ctx} estado={p.estado} vitrinaId={p.vitrinaId} segmento={p.segmento} onCambiar={mover} />
       {error && <p className="error">{error}</p>}
+      {aviso && <AvisarDueno ajustes={ctx.ajustes} texto={aviso} onListo={() => setAviso('')} />}
       {!ctx.admin && <FotosProducto p={p} onListo={onCerrar} />}
       {ctx.admin && (
         <div className="fila">

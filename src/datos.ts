@@ -41,6 +41,8 @@ export type Ajustes = {
   tipoCambio?: number
   // Peso máximo de cada foto nueva en KB (150, 300 o 500).
   fotoKB?: number
+  // WhatsApp del dueño para el aviso de cada venta (si está vacío se usa el teléfono de la tienda).
+  whatsappAvisos?: string
 }
 
 export const AJUSTES_INICIALES: Ajustes = {
