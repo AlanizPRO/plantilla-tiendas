@@ -26,6 +26,7 @@ export function Tarjeta({ p, ctx, onClick, marcado }: { p: Producto; ctx: Contex
       {p.miniatura ? <img src={p.miniatura} alt="" /> : <span className="sin-foto">{ICONOS.camara}</span>}
       {marcado && <span className="check-marca" aria-hidden="true">✓</span>}
       <b>{nombreProducto(p)}</b>
+      {p.color && <small className="suave">{p.color}</small>}
       <small>{dinero(p.precio, ctx.ajustes.moneda)}</small>
       <span className={`pill ${pill}`}>{p.estado === 'exhibicion' ? lugarDe(p, ctx.vitrinas) : texto}</span>
     </button>
@@ -216,6 +217,7 @@ export function HojaProducto({ p, ctx, onCerrar }: { p: Producto; ctx: Contexto;
         {ctx.admin && costo?.costo ? <p className="suave chico">Costo: {dinero(costo.costo, ctx.ajustes.moneda)} · Ganancia: {dinero(p.precio - costo.costo, ctx.ajustes.moneda)}</p> : null}
         {[['Código', p.codigo], ['Material', p.material], ['Color', p.color]].filter(([, v]) => v).map(([k, v]) => <p key={k}><b>{k}:</b> {v}</p>)}
         {p.descripcion && <p className="suave">{p.descripcion}</p>}
+        {p.codigo && <Variantes p={p} ctx={ctx} />}
       </div>
       <SelectorLugar ctx={ctx} estado={p.estado} vitrinaId={p.vitrinaId} segmento={p.segmento} onCambiar={mover} />
       {error && <p className="error">{error}</p>}
@@ -393,5 +395,16 @@ function FotosProducto({ p, onListo }: { p: Producto; onListo: () => void }) {
       {error && <p className="error">{error}</p>}
       <button className="btn btn-principal" disabled={guardando || procesando} onClick={guardar}>{guardando ? 'Guardando…' : 'Guardar fotos'}</button>
     </div>
+  )
+}
+
+// Variantes: otras piezas con el mismo código (mismo modelo en otro color), para ver cuántas hay de cada color.
+function Variantes({ p, ctx }: { p: Producto; ctx: Contexto }) {
+  const mismas = ctx.productos.filter((x) => x.id !== p.id && x.codigo === p.codigo && x.estado !== 'vendido')
+  if (mismas.length === 0) return null
+  const colores = new Map<string, number>()
+  mismas.forEach((x) => { const c = x.color || 'Sin color'; colores.set(c, (colores.get(c) ?? 0) + 1) })
+  return (
+    <p className="suave chico"><b>Mismo código ({p.codigo}):</b> {mismas.length} más — {[...colores.entries()].map(([c, n]) => `${c} ${n}`).join(', ')}</p>
   )
 }
