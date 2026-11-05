@@ -1,5 +1,6 @@
 import { addDoc, deleteDoc, deleteField, doc, getDoc, serverTimestamp, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { KeyboardEvent, TouchEvent } from 'react'
 import { tiene } from '../cliente'
 import { Hoja, Vacio } from '../componentes'
 import {
@@ -129,25 +130,71 @@ export function useFotos(ids: string[] = []) {
   return fotos
 }
 
+/** Deslizar el dedo a la izquierda o derecha para pasar de foto. */
+function useDeslizar(total: number, setI: (f: (i: number) => number) => void) {
+  const inicio = useRef<{ x: number; y: number } | null>(null)
+  const movido = useRef(false)
+  const [dx, setDx] = useState(0)
+  const ir = (paso: number) => setI((i) => Math.min(total - 1, Math.max(0, i + paso)))
+  return {
+    dx,
+    /** true si el último toque fue un deslizamiento (para no abrir la foto). */
+    fueDeslizar: () => movido.current,
+    eventos: {
+      onTouchStart: (e: TouchEvent) => {
+        const t = e.touches[0]
+        inicio.current = { x: t.clientX, y: t.clientY }
+        movido.current = false
+      },
+      onTouchMove: (e: TouchEvent) => {
+        if (!inicio.current || total < 2) return
+        const t = e.touches[0]
+        const x = t.clientX - inicio.current.x
+        const y = t.clientY - inicio.current.y
+        if (!movido.current && Math.abs(x) > 10 && Math.abs(x) > Math.abs(y)) movido.current = true
+        if (movido.current) setDx(x)
+      },
+      onTouchEnd: () => {
+        if (movido.current && Math.abs(dx) > 40) ir(dx < 0 ? 1 : -1)
+        inicio.current = null
+        setDx(0)
+      },
+      onTouchCancel: () => { inicio.current = null; setDx(0) },
+    },
+    ir,
+  }
+}
+
 export function Galeria({ ids, miniatura }: { ids?: string[]; miniatura?: string }) {
   const fotos = useFotos(ids)
+  const total = ids?.length ?? 0
   const [i, setI] = useState(0)
+  useEffect(() => { if (i > 0 && i >= total) setI(0) }, [i, total])
   const actual = ids?.[i]
   const src = (actual && fotos[actual]) || (i === 0 ? miniatura : undefined)
   const [ampliada, setAmpliada] = useState(false)
+  const desl = useDeslizar(total, setI)
+  const mover = desl.dx ? { transform: `translateX(${desl.dx}px)`, transition: 'none' } : undefined
+  const teclas = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') desl.ir(-1)
+    if (e.key === 'ArrowRight') desl.ir(1)
+  }
   return (
-    <div className="galeria">
-      {src ? <img className="foto-grande" src={src} alt="" role="button" tabIndex={0} title="Toca para ampliar" onClick={() => setAmpliada(true)} onKeyDown={(e) => { if (e.key === 'Enter') setAmpliada(true) }} /> : <div className="foto-grande sin-foto">{ICONOS.camara}</div>}
+    <div className="galeria" onKeyDown={teclas}>
+      <div className="galeria-marco" {...desl.eventos}>
+        {src ? <img className="foto-grande" style={mover} src={src} alt="" draggable={false} role="button" tabIndex={0} title={total > 1 ? 'Desliza para ver otra foto · toca para ampliar' : 'Toca para ampliar'} onClick={() => { if (!desl.fueDeslizar()) setAmpliada(true) }} onKeyDown={(e) => { if (e.key === 'Enter') setAmpliada(true) }} /> : <div className="foto-grande sin-foto" style={mover}>{ICONOS.camara}</div>}
+      </div>
       {ampliada && src && (
-        <div className="foto-ampliada" role="dialog" aria-label="Foto ampliada" onClick={() => setAmpliada(false)}>
-          <img src={src} alt="" />
+        <div className="foto-ampliada" role="dialog" aria-label="Foto ampliada" onClick={() => { if (!desl.fueDeslizar()) setAmpliada(false) }} {...desl.eventos}>
+          <img src={src} alt="" style={mover} draggable={false} />
+          {total > 1 && <p className="foto-contador">{i + 1} de {total}</p>}
           <button className="btn btn-principal" onClick={() => setAmpliada(false)}>Cerrar</button>
         </div>
       )}
-      {(ids?.length ?? 0) > 1 && (
+      {total > 1 && (
         <div className="fila">
           {ids!.map((id, j) => (
-            <button key={id} className={`punto-foto ${j === i ? 'activo' : ''}`} aria-label={`Foto ${j + 1}`} onClick={() => setI(j)} />
+            <button key={id} className={`punto-foto ${j === i ? 'activo' : ''}`} aria-label={`Foto ${j + 1}`} onClick={() => setI(() => j)} />
           ))}
         </div>
       )}
