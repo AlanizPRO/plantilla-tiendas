@@ -39,6 +39,8 @@ export type Ajustes = {
   inventarioCargado?: boolean
   // Córdobas por cada dólar (lo pone el dueño). Sirve para mostrar los ingresos en US$.
   tipoCambio?: number
+  // Peso máximo de cada foto nueva en KB (150, 300 o 500).
+  fotoKB?: number
 }
 
 export const AJUSTES_INICIALES: Ajustes = {

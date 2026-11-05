@@ -29,8 +29,8 @@ function dibujar(img: Fuente, lado: number, cuadrada: boolean) {
 }
 
 // Baja la calidad hasta que la foto pese menos del máximo.
-function comprimir(lienzo: HTMLCanvasElement, maxBytes: number) {
-  let calidad = 0.82
+function comprimir(lienzo: HTMLCanvasElement, maxBytes: number, inicial = 0.82) {
+  let calidad = inicial
   let datos = lienzo.toDataURL('image/jpeg', calidad)
   while (datos.length * 0.75 > maxBytes && calidad > 0.35) {
     calidad -= 0.08
@@ -80,11 +80,32 @@ function recortarFondo(img: HTMLImageElement): Fuente {
   return r
 }
 
+// Calidad de las fotos nuevas, en KB (Ajustes → Calidad de las fotos). Cada foto va en su propio registro
+// de la base de datos (máximo 1 MB), así que no pasa de 500 KB. Más KB = menos fotos caben en el plan gratis.
+export const CALIDADES_FOTO: [number, string][] = [
+  [150, 'Normal · 150 KB (caben unas 6,500 fotos en el plan gratis)'],
+  [300, 'Alta · 300 KB (unas 2,600 fotos)'],
+  [500, 'Muy alta · 500 KB (unas 1,600 fotos)'],
+]
+export const CALIDAD_FOTO_INICIAL = 150
+let kbFoto = CALIDAD_FOTO_INICIAL
+export function ponerCalidadFotos(kb?: number) {
+  kbFoto = Math.min(500, Math.max(100, Number(kb) || CALIDAD_FOTO_INICIAL))
+}
+
 export async function prepararFoto(archivo: File) {
   const img = await cargar(archivo)
   const sinFondo = recortarFondo(img)
+  // Con más KB también se guarda más grande (más detalle al hacer zoom).
+  let lado = kbFoto >= 400 ? 2000 : kbFoto >= 250 ? 1600 : 1100
+  let grande = comprimir(dibujar(sinFondo, lado, false), kbFoto * 1000, kbFoto >= 250 ? 0.9 : 0.82)
+  // Si aun con menos calidad pesa demasiado, se achica la foto hasta que quepa.
+  while (grande.length * 0.75 > kbFoto * 1000 && lado > 600) {
+    lado = Math.round(lado * 0.8)
+    grande = comprimir(dibujar(sinFondo, lado, false), kbFoto * 1000)
+  }
   return {
-    grande: comprimir(dibujar(sinFondo, 1100, false), 150_000),
+    grande,
     miniatura: comprimir(dibujar(sinFondo, 220, true), 14_000),
   }
 }

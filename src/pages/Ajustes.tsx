@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { cargarInventarioInicial, inventarioInicial, marcarCargado, piezasDelExcelSinTocar, quitarRepetidos, repetidosDelExcel } from '../cargaInicial'
 import { mensajeError, type Ajustes as TAjustes, type Producto, type Vitrina } from '../datos'
 import { db } from '../firebase'
+import { CALIDADES_FOTO, CALIDAD_FOTO_INICIAL } from '../fotos'
 import { T } from '../textos'
 import BotonRespaldo from './BotonRespaldo'
 
@@ -61,6 +62,15 @@ export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAj
           <label className="campo" htmlFor="a-gar">Garantía<input id="a-gar" value={a.garantia} onChange={(e) => poner('garantia', e.target.value)} placeholder="Ej. 1 año en maquinaria" /></label>
         </div>
         <label className="campo" htmlFor="a-nota">Nota al pie<textarea id="a-nota" value={a.notaProforma} onChange={(e) => poner('notaProforma', e.target.value)} placeholder="Ej. Aceptamos tarjeta y transferencia." /></label>
+      </div>
+      <div className="panel">
+        <h3>Calidad de las fotos</h3>
+        <p className="suave chico">Solo cambia las fotos nuevas. Más calidad se ve mejor al hacer zoom, pero caben menos fotos en el plan gratis.</p>
+        <label className="campo" htmlFor="a-fotokb">Peso de cada foto
+          <select id="a-fotokb" value={a.fotoKB ?? CALIDAD_FOTO_INICIAL} onChange={(e) => poner('fotoKB', Number(e.target.value))}>
+            {CALIDADES_FOTO.map(([kb, texto]) => <option key={kb} value={kb}>{texto}</option>)}
+          </select>
+        </label>
       </div>
       {estado === 'ok' && <p className="ok">Guardado.</p>}
       {estado && estado !== 'ok' && estado !== 'guardando' && <p className="error">{estado}</p>}

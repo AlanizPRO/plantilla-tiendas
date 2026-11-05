@@ -5,6 +5,7 @@ import { cargarInventarioInicial, inventarioInicial, marcarCargado } from '../ca
 import { cliente, tiene } from '../cliente'
 import { Barra, Encabezado, type Pestana } from '../componentes'
 import { col, todos, useAjustesConEstado, useDoc, useLista, type Ajustes as TAjustes, type Producto, type Seleccion, type Vitrina } from '../datos'
+import { ponerCalidadFotos } from '../fotos'
 import { ICONOS } from '../iconos'
 import { salir } from '../sesion'
 import { T } from '../textos'
@@ -33,6 +34,8 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
   const [vista, setVista] = useState<Vista>('inicio')
   const [accion, setAccion] = useState('')
   const [ajustes, ajustesCargados] = useAjustesConEstado()
+  // Las fotos nuevas (del dueño y de los vendedores) salen con la calidad elegida en Ajustes.
+  useEffect(() => { ponerCalidadFotos(ajustes.fotoKB) }, [ajustes.fotoKB])
   const productosVivos = useLista<Producto>(todos('productos'))
   const productos = productosVivos ?? []
   const vitrinas = (useLista<Vitrina>(query(col('vitrinas'), orderBy('orden'))) ?? [])
