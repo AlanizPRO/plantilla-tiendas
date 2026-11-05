@@ -154,8 +154,12 @@ label.campo { display: flex; flex-direction: column; gap: 6px; font-weight: 700;
 .galeria { display: flex; flex-direction: column; gap: 8px; align-items: center; }
 .galeria-marco { width: 100%; overflow: hidden; border-radius: 16px; touch-action: pan-y; }
 .foto-grande { width: 100%; transition: transform .2s ease; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; aspect-ratio: 1; object-fit: contain; border-radius: 16px; background: var(--gris-suave); }
-.punto-foto { width: 12px; height: 12px; border-radius: 50%; border: 0; background: var(--linea); padding: 0; }
-.punto-foto.activo { background: var(--principal); }
+.entra-derecha { animation: foto-entra-derecha .45s cubic-bezier(.22,.8,.3,1); }
+.entra-izquierda { animation: foto-entra-izquierda .45s cubic-bezier(.22,.8,.3,1); }
+@keyframes foto-entra-derecha { from { transform: translateX(70%); opacity: .2; } to { transform: none; opacity: 1; } }
+@keyframes foto-entra-izquierda { from { transform: translateX(-70%); opacity: .2; } to { transform: none; opacity: 1; } }
+.punto-foto { transition: background .3s, transform .3s; width: 12px; height: 12px; border-radius: 50%; border: 0; background: var(--linea); padding: 0; }
+.punto-foto.activo { background: var(--principal); transform: scale(1.25); }
 .fotos-form { display: flex; gap: 8px; flex-wrap: wrap; }
 .foto-mini { position: relative; width: 76px; height: 76px; border-radius: 12px; border: 1.5px dashed var(--linea); background: var(--card); display: grid; place-items: center; overflow: hidden; }
 .foto-mini img { width: 100%; height: 100%; object-fit: cover; }

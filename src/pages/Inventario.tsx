@@ -131,11 +131,11 @@ export function useFotos(ids: string[] = []) {
 }
 
 /** Deslizar el dedo a la izquierda o derecha para pasar de foto. */
-function useDeslizar(total: number, setI: (f: (i: number) => number) => void) {
+function useDeslizar(total: number, setI: (f: (i: number) => number) => void, setDir: (d: number) => void) {
   const inicio = useRef<{ x: number; y: number } | null>(null)
   const movido = useRef(false)
   const [dx, setDx] = useState(0)
-  const ir = (paso: number) => setI((i) => Math.min(total - 1, Math.max(0, i + paso)))
+  const ir = (paso: number) => { setDir(paso); setI((i) => Math.min(total - 1, Math.max(0, i + paso))) }
   return {
     dx,
     /** true si el último toque fue un deslizamiento (para no abrir la foto). */
@@ -173,7 +173,9 @@ export function Galeria({ ids, miniatura }: { ids?: string[]; miniatura?: string
   const actual = ids?.[i]
   const src = (actual && fotos[actual]) || (i === 0 ? miniatura : undefined)
   const [ampliada, setAmpliada] = useState(false)
-  const desl = useDeslizar(total, setI)
+  const [dir, setDir] = useState(0)
+  const desl = useDeslizar(total, setI, setDir)
+  const entrada = dir > 0 ? 'entra-derecha' : dir < 0 ? 'entra-izquierda' : ''
   const mover = desl.dx ? { transform: `translateX(${desl.dx}px)`, transition: 'none' } : undefined
   const teclas = (e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft') desl.ir(-1)
@@ -182,11 +184,11 @@ export function Galeria({ ids, miniatura }: { ids?: string[]; miniatura?: string
   return (
     <div className="galeria" onKeyDown={teclas}>
       <div className="galeria-marco" {...desl.eventos}>
-        {src ? <img className="foto-grande" style={mover} src={src} alt="" draggable={false} role="button" tabIndex={0} title={total > 1 ? 'Desliza para ver otra foto · toca para ampliar' : 'Toca para ampliar'} onClick={() => { if (!desl.fueDeslizar()) setAmpliada(true) }} onKeyDown={(e) => { if (e.key === 'Enter') setAmpliada(true) }} /> : <div className="foto-grande sin-foto" style={mover}>{ICONOS.camara}</div>}
+        {src ? <img key={i} className={`foto-grande ${entrada}`} style={mover} src={src} alt="" draggable={false} role="button" tabIndex={0} title={total > 1 ? 'Desliza para ver otra foto · toca para ampliar' : 'Toca para ampliar'} onClick={() => { if (!desl.fueDeslizar()) setAmpliada(true) }} onKeyDown={(e) => { if (e.key === 'Enter') setAmpliada(true) }} /> : <div className="foto-grande sin-foto" style={mover}>{ICONOS.camara}</div>}
       </div>
       {ampliada && src && (
         <div className="foto-ampliada" role="dialog" aria-label="Foto ampliada" onClick={() => { if (!desl.fueDeslizar()) setAmpliada(false) }} {...desl.eventos}>
-          <img src={src} alt="" style={mover} draggable={false} />
+          <img key={i} className={entrada} src={src} alt="" style={mover} draggable={false} />
           {total > 1 && <p className="foto-contador">{i + 1} de {total}</p>}
           <button className="btn btn-principal" onClick={() => setAmpliada(false)}>Cerrar</button>
         </div>
@@ -194,7 +196,7 @@ export function Galeria({ ids, miniatura }: { ids?: string[]; miniatura?: string
       {total > 1 && (
         <div className="fila">
           {ids!.map((id, j) => (
-            <button key={id} className={`punto-foto ${j === i ? 'activo' : ''}`} aria-label={`Foto ${j + 1}`} onClick={() => setI(() => j)} />
+            <button key={id} className={`punto-foto ${j === i ? 'activo' : ''}`} aria-label={`Foto ${j + 1}`} onClick={() => { setDir(j > i ? 1 : -1); setI(() => j) }} />
           ))}
         </div>
       )}
