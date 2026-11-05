@@ -44,7 +44,7 @@ export default function CajaChica({ ctx }: { ctx: Contexto }) {
 
   return (
     <section className="pantalla">
-      <div className="top"><div><h1>Caja chica</h1><p className="suave">Solo tú lo ves.</p></div></div>
+      <div className="top"><div><h1>Caja chica</h1><p className="suave">Lo ven y lo manejan el dueño y los colaboradores.</p></div></div>
       <div className="panel">
         <h3>Saldo actual</h3>
         <p style={{ fontSize: 28 }}><b className={saldo < 0 ? 'error' : ''}>{dinero(saldo, moneda)}</b></p>

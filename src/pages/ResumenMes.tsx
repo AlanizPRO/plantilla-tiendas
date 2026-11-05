@@ -6,6 +6,7 @@ import type { Contexto } from './Tienda'
 
 type Movimiento = { id: string; concepto: string; tipo: 'entrada' | 'salida'; monto: number; dia: string }
 type Gasto = { id: string; monto: number; mes: string }
+type Cobro = { id: string; tipo: 'servicio' | 'accesorio'; concepto: string; precio: number; cantidad: number; dia: string }
 
 const mesDe = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 const etiquetaMes = (m: string) => { const [a, b] = m.split('-').map(Number); return new Date(a, b - 1, 1).toLocaleDateString('es-NI', { month: 'long', year: 'numeric' }) }
@@ -17,6 +18,7 @@ export default function ResumenMes({ ctx }: { ctx: Contexto }) {
   const proformas = useLista<Proforma>(todos('proformas')) ?? []
   const caja = useLista<Movimiento>(ctx.admin ? todos('caja') : null) ?? []
   const gastos = useLista<Gasto>(ctx.admin ? todos('gastos') : null) ?? []
+  const cobros = useLista<Cobro>(todos('cobros')) ?? []
   const [mes, setMes] = useState(mesDe(new Date()))
   const moneda = ctx.ajustes.moneda
 
@@ -34,6 +36,12 @@ export default function ResumenMes({ ctx }: { ctx: Contexto }) {
   const efectivo = cajaMes.reduce((s, m) => s + (m.tipo === 'entrada' ? 1 : -1) * (Number(m.monto) || 0), 0)
   const saldoCaja = caja.reduce((s, m) => s + (m.tipo === 'entrada' ? 1 : -1) * (Number(m.monto) || 0), 0)
   const gastosMes = gastos.filter((g) => g.mes === mes).reduce((s, g) => s + (Number(g.monto) || 0), 0)
+  const cobrosMes = cobros.filter((c) => c.dia.startsWith(mes))
+  const servicios = cobrosMes.filter((c) => c.tipo === 'servicio').reduce((s, c) => s + (Number(c.precio) || 0) * (Number(c.cantidad) || 1), 0)
+  const accesorios = cobrosMes.filter((c) => c.tipo === 'accesorio').reduce((s, c) => s + (Number(c.precio) || 0) * (Number(c.cantidad) || 1), 0)
+  const totalGeneral = totalVentas + servicios + accesorios
+  const cambio = Number(ctx.ajustes.tipoCambio) || 0
+  const enDolares = cambio > 0 ? totalGeneral / cambio : null
 
   return (
     <section className="pantalla">
@@ -50,6 +58,8 @@ export default function ResumenMes({ ctx }: { ctx: Contexto }) {
           <dt>{T.Productos} vendidos</dt><dd><b>{vendidos.length}</b> {vendidos.length === 1 ? 'unidad' : 'unidades'}</dd>
           <dt>Proformas vendidas</dt><dd><b>{ventasProforma.length}</b></dd>
           <dt>Total de los {T.productos} vendidos</dt><dd><b>{dinero(totalVentas, moneda)}</b></dd>
+          <dt>Servicios cobrados</dt><dd>{dinero(servicios, moneda)}</dd>
+          <dt>Accesorios vendidos</dt><dd>{dinero(accesorios, moneda)}</dd>
         </dl>
         {vendidos.length === 0 && <Vacio>No hay ventas registradas en {etiquetaMes(mes)}.</Vacio>}
         {ventasProforma.length > 0 && (
@@ -81,8 +91,10 @@ export default function ResumenMes({ ctx }: { ctx: Contexto }) {
         <dl className="resumen-g">
           <dt>{T.Productos} vendidos</dt><dd>{vendidos.length}</dd>
           <dt>Proformas vendidas</dt><dd>{ventasProforma.length}</dd>
-          <dt>Total vendido</dt><dd>{dinero(totalVentas, moneda)}</dd>
+          <dt>Total vendido (incluye servicios y accesorios)</dt><dd>{dinero(totalGeneral, moneda)}</dd>
+          {enDolares !== null && <><dt>Equivalente en US$ (a {cambio})</dt><dd>US$ {enDolares.toLocaleString('es-NI', { maximumFractionDigits: 2 })}</dd></>}
         </dl>
+        {enDolares === null && <p className="suave chico">Para ver el equivalente en dólares, el dueño pone el tipo de cambio en Ajustes.</p>}
       </div>
     </section>
   )

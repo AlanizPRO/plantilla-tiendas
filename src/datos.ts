@@ -37,6 +37,8 @@ export type Ajustes = {
   nombreTienda: string; telefono: string; direccion: string; moneda: string
   validezDias: number; garantia: string; notaProforma: string; estilos: string[]
   inventarioCargado?: boolean
+  // Córdobas por cada dólar (lo pone el dueño). Sirve para mostrar los ingresos en US$.
+  tipoCambio?: number
 }
 
 export const AJUSTES_INICIALES: Ajustes = {

@@ -47,9 +47,22 @@ service cloud.firestore {
       allow read, write: if esAdmin();
     }
 
-    // Caja chica (efectivo): solo el dueño.
+    // Caja chica (efectivo): el dueño y los colaboradores la ven y la manejan.
     match /caja/{id} {
-      allow read, write: if esAdmin();
+      allow read, write: if esEquipo();
+    }
+
+    // Servicios y accesorios cobrados: el equipo registra; solo el dueño quita un cobro.
+    match /cobros/{id} {
+      allow read: if esEquipo();
+      allow create: if esEquipo() && request.resource.data.por == request.auth.uid;
+      allow delete: if esAdmin();
+    }
+
+    // Accesorios (baterías, tornillos…) con existencias.
+    match /accesorios/{id} {
+      allow read, create, update: if esEquipo();
+      allow delete: if esAdmin();
     }
 
     // Fotos grandes. Se pueden abrir sin sesión (el cliente las ve en su enlace) pero no listar.

@@ -13,6 +13,7 @@ import Equipo from './Equipo'
 import Gastos from './Gastos'
 import CajaChica from './CajaChica'
 import ResumenMes from './ResumenMes'
+import Servicios from './Servicios'
 import { Avatar, CambiarFoto } from './MiFoto'
 import Tablero from './Tablero'
 import Inicio from './Inicio'
@@ -20,7 +21,7 @@ import Inventario from './Inventario'
 import Ventas from './Ventas'
 import Vitrinas from './Vitrinas'
 
-type Vista = 'inicio' | 'vitrinas' | 'inventario' | 'ventas' | 'mas' | 'equipo' | 'ajustes' | 'gastos' | 'tablero' | 'caja' | 'resumen'
+type Vista = 'inicio' | 'vitrinas' | 'inventario' | 'ventas' | 'mas' | 'equipo' | 'ajustes' | 'gastos' | 'tablero' | 'caja' | 'resumen' | 'servicios'
 
 // Lo que comparten todas las pantallas de la tienda.
 export type Contexto = {
@@ -59,7 +60,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
     ...(tiene('selecciones') || tiene('proformas') ? [{ id: 'ventas', nombre: 'Ventas', icono: 'ventas', punto: respondidas.length > 0 }] : []),
     { id: 'mas', nombre: 'Más', icono: 'mas' },
   ]
-  const actual = ['equipo', 'ajustes', 'gastos', 'tablero', 'caja', 'resumen'].includes(vista) ? 'mas' : vista
+  const actual = ['equipo', 'ajustes', 'gastos', 'tablero', 'caja', 'resumen', 'servicios'].includes(vista) ? 'mas' : vista
   const miPerfil = useDoc<{ foto?: string }>(admin ? null : `usuarios/${ctx.uid}`)
 
   return (
@@ -74,7 +75,8 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
           {vista === 'ventas' && <Ventas key={accion} ctx={ctx} selecciones={selecciones} accion={accion} />}
           {vista === 'equipo' && admin && <Equipo />}
           {vista === 'gastos' && admin && <Gastos ctx={ctx} />}
-          {vista === 'caja' && admin && <CajaChica ctx={ctx} />}
+          {vista === 'caja' && <CajaChica ctx={ctx} />}
+          {vista === 'servicios' && <Servicios ctx={ctx} />}
           {vista === 'resumen' && <ResumenMes ctx={ctx} />}
           {vista === 'tablero' && <Tablero ctx={ctx} />}
           {vista === 'ajustes' && admin && <Ajustes key={ajustesCargados ? 'cargado' : 'inicial'} ajustes={ajustes} productos={productos} vitrinas={vitrinas} />}
@@ -87,7 +89,8 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
                 {admin && <Opcion icono="equipo" titulo="Colaboradores" texto="Invitar y quitar colaboradores" onClick={() => ir('equipo')} />}
                 <Opcion icono="ventas" titulo="Resumen del mes" texto="Ventas del mes y, para el dueño, caja y efectivo" onClick={() => ir('resumen')} />
                 <Opcion icono="ventas" titulo="Tablero de ventas" texto="Proforma, aceptada, en reparto y finalizada" onClick={() => ir('tablero')} />
-                {admin && <Opcion icono="inicio" titulo="Caja chica" texto="Entradas, salidas y saldo del efectivo" onClick={() => ir('caja')} />}
+                <Opcion icono="inicio" titulo="Caja chica" texto="Entradas, salidas y saldo del efectivo" onClick={() => ir('caja')} />
+                <Opcion icono="ventas" titulo="Servicios y accesorios" texto="Cobros de reparación y venta de baterías, tornillos" onClick={() => ir('servicios')} />
                 {admin && <Opcion icono="inicio" titulo="Gastos y ganancia" texto="Renta, salarios y ganancia real del mes" onClick={() => ir('gastos')} />}
                 {admin && <Opcion icono="ajustes" titulo="Ajustes" texto="Datos de la tienda, estilos y proformas" onClick={() => ir('ajustes')} />}
               </div>

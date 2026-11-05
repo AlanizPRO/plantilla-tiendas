@@ -34,6 +34,7 @@ export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAj
           <label className="campo" htmlFor="a-nombre">Nombre<input id="a-nombre" value={a.nombreTienda} onChange={(e) => poner('nombreTienda', e.target.value)} /></label>
           <label className="campo" htmlFor="a-tel">Teléfono / WhatsApp<input id="a-tel" type="tel" inputMode="tel" value={a.telefono} onChange={(e) => poner('telefono', e.target.value)} /></label>
           <label className="campo" htmlFor="a-moneda">Moneda<input id="a-moneda" value={a.moneda} onChange={(e) => poner('moneda', e.target.value)} placeholder="C$ o US$" /></label>
+          <label className="campo" htmlFor="a-cambio">Tipo de cambio (C$ por cada US$1)<input id="a-cambio" type="number" inputMode="decimal" min={0} value={a.tipoCambio ?? ''} onChange={(e) => poner('tipoCambio', Number(e.target.value) || 0)} placeholder="Ej. 36.6" /></label>
         </div>
         <label className="campo" htmlFor="a-dir">Dirección<input id="a-dir" value={a.direccion} onChange={(e) => poner('direccion', e.target.value)} /></label>
       </div>
