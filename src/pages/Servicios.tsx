@@ -1,13 +1,15 @@
 import { addDoc, deleteDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore'
 import { useMemo, useState } from 'react'
 import { Vacio } from '../componentes'
-import { col, dinero, mensajeError, todos, useLista } from '../datos'
+import { col, dinero, mensajeError, nombreProducto, todos, useLista } from '../datos'
+import { T } from '../textos'
 import { db } from '../firebase'
 import type { Contexto } from './Tienda'
 
 export type Accesorio = { id: string; nombre: string; precio: number; existencias: number }
 export type Cobro = { id: string; tipo: 'servicio' | 'accesorio'; concepto: string; precio: number; cantidad: number; dia: string; por: string; porNombre?: string }
 
+const hoyDe = (t: { toDate: () => Date }) => { const d = t.toDate(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const hoy = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 
 // Servicios (mantenimiento, reparación) y accesorios (baterías, tornillos…). Lo ven y registran el dueño y los colaboradores.
@@ -22,6 +24,11 @@ export default function Servicios({ ctx }: { ctx: Contexto }) {
   const [nuevoPrecio, setNuevoPrecio] = useState('')
   const [nuevasExist, setNuevasExist] = useState('')
   const moneda = ctx.ajustes.moneda
+  // Lo que se ha vendido hoy: relojes marcados como vendidos hoy, más servicios y accesorios cobrados hoy.
+  const hoyTxt = hoy()
+  const relojesHoy = ctx.productos.filter((p) => p.estado === 'vendido' && (p.vendidoEn as { toDate?: () => Date } | undefined)?.toDate?.() && hoyDe(p.vendidoEn as { toDate: () => Date }) === hoyTxt)
+  const cobrosHoy = cobros.filter((c) => c.dia === hoyTxt)
+  const totalHoy = relojesHoy.reduce((s, p) => s + (Number(p.precio) || 0), 0) + cobrosHoy.reduce((s, c) => s + (Number(c.precio) || 0) * (Number(c.cantidad) || 1), 0)
   const delMes = useMemo(() => cobros.filter((c) => c.dia.startsWith(hoy().slice(0, 7))).sort((a, b) => (a.dia < b.dia ? 1 : -1)), [cobros])
 
   async function registrarServicio() {
@@ -65,6 +72,15 @@ export default function Servicios({ ctx }: { ctx: Contexto }) {
       <div className="tabs" role="tablist">
         <button className="tab" role="tab" aria-selected={pestana === 'servicios'} onClick={() => setPestana('servicios')}>Servicios</button>
         <button className="tab" role="tab" aria-selected={pestana === 'accesorios'} onClick={() => setPestana('accesorios')}>Accesorios</button>
+      </div>
+      <div className="panel">
+        <h3>Ventas de hoy</h3>
+        <dl className="resumen-g">
+          <dt>{T.Productos} vendidos hoy</dt><dd>{relojesHoy.length}</dd>
+          <dt>Servicios y accesorios de hoy</dt><dd>{cobrosHoy.length}</dd>
+          <dt>Total del día</dt><dd><b>{dinero(totalHoy, moneda)}</b></dd>
+        </dl>
+        {relojesHoy.map((p) => <div key={p.id} className="fila" style={{ justifyContent: 'space-between' }}><span>{nombreProducto(p)} <small className="suave">· {T.producto}</small></span><b>{dinero(Number(p.precio) || 0, moneda)}</b></div>)}
       </div>
       {error && <p className="error">{error}</p>}
 
