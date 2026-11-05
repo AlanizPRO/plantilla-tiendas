@@ -142,12 +142,14 @@ function useDeslizar(total: number, setI: (f: (i: number) => number) => void, se
     fueDeslizar: () => movido.current,
     eventos: {
       onTouchStart: (e: TouchEvent) => {
+        // Con dos dedos es zoom, no deslizar.
+        if (e.touches.length > 1) { inicio.current = null; movido.current = false; setDx(0); return }
         const t = e.touches[0]
         inicio.current = { x: t.clientX, y: t.clientY }
         movido.current = false
       },
       onTouchMove: (e: TouchEvent) => {
-        if (!inicio.current || total < 2) return
+        if (!inicio.current || total < 2 || e.touches.length > 1) return
         const t = e.touches[0]
         const x = t.clientX - inicio.current.x
         const y = t.clientY - inicio.current.y
@@ -163,6 +165,87 @@ function useDeslizar(total: number, setI: (f: (i: number) => number) => void, se
     },
     ir,
   }
+}
+
+type Punto = { x: number; y: number }
+const distancia = (a: Punto, b: Punto) => Math.hypot(a.x - b.x, a.y - b.y)
+const puntos = (e: TouchEvent) => Array.from(e.touches).map((t) => ({ x: t.clientX, y: t.clientY }))
+
+/**
+ * Foto en pantalla completa: pellizcar con dos dedos o tocar dos veces para hacer zoom,
+ * arrastrar para moverse cuando hay zoom, y deslizar para cambiar de foto cuando no hay zoom.
+ */
+function FotoAmpliada({ src, entrada, contador, ir, onCerrar }: {
+  src: string; entrada: string; contador: string; ir: (paso: number) => void; onCerrar: () => void
+}) {
+  const [escala, setEscala] = useState(1)
+  const [pos, setPos] = useState<Punto>({ x: 0, y: 0 })
+  const [dx, setDx] = useState(0)
+  const [tocando, setTocando] = useState(false)
+  const g = useRef<{ modo: 'nada' | 'zoom' | 'mover' | 'deslizar' | 'quizas'; d0: number; e0: number; p0: Punto; pos0: Punto; ultimoToque: number; finToque: number; toque: boolean }>({ modo: 'nada', d0: 1, e0: 1, p0: { x: 0, y: 0 }, pos0: { x: 0, y: 0 }, ultimoToque: 0, finToque: 0, toque: false })
+  const limitar = (e: number) => Math.min(5, Math.max(1, e))
+
+  const inicio = (e: TouchEvent) => {
+    const p = puntos(e)
+    setTocando(true)
+    if (p.length >= 2) {
+      g.current = { ...g.current, modo: 'zoom', d0: distancia(p[0], p[1]), e0: escala, toque: false, ultimoToque: 0 }
+      setDx(0)
+      return
+    }
+    g.current = { ...g.current, modo: escala > 1 ? 'mover' : 'quizas', p0: p[0], pos0: pos, toque: true }
+  }
+  const mover = (e: TouchEvent) => {
+    const p = puntos(e)
+    const k = g.current
+    if (k.modo === 'zoom' && p.length >= 2) { setEscala(limitar(k.e0 * distancia(p[0], p[1]) / k.d0)); return }
+    if (!p.length) return
+    const x = p[0].x - k.p0.x
+    const y = p[0].y - k.p0.y
+    if (k.modo === 'mover') setPos({ x: k.pos0.x + x, y: k.pos0.y + y })
+    else if (k.modo === 'quizas' && Math.abs(x) > 10 && Math.abs(x) > Math.abs(y)) k.modo = 'deslizar'
+    if (k.modo === 'deslizar') setDx(x)
+    if (Math.abs(x) > 10 || Math.abs(y) > 10) { k.toque = false; k.ultimoToque = 0 }
+  }
+  const fin = (e: TouchEvent) => {
+    const k = g.current
+    if (e.touches.length) {
+      // Quedó un dedo después de pellizcar: seguir moviendo desde ahí.
+      if (k.modo === 'zoom') g.current = { ...k, modo: escala > 1 ? 'mover' : 'nada', p0: puntos(e)[0], pos0: pos }
+      return
+    }
+    setTocando(false)
+    const ahora = Date.now()
+    k.finToque = ahora
+    if (k.toque) {
+      // Doble toque: acercar o volver al tamaño normal.
+      if (ahora - k.ultimoToque < 300) {
+        k.ultimoToque = 0
+        k.toque = false
+        k.modo = 'nada'
+        if (escala > 1) { setEscala(1); setPos({ x: 0, y: 0 }) } else setEscala(2.5)
+        return
+      }
+      k.ultimoToque = ahora
+    }
+    k.toque = false
+    if (k.modo === 'deslizar' && Math.abs(dx) > 40) ir(dx < 0 ? 1 : -1)
+    setDx(0)
+    if (escala < 1.05) { setEscala(1); setPos({ x: 0, y: 0 }) }
+    k.modo = 'nada'
+  }
+
+  const transform = escala > 1 ? `translate(${pos.x}px, ${pos.y}px) scale(${escala})` : dx ? `translateX(${dx}px)` : undefined
+  return (
+    <div className="foto-ampliada" role="dialog" aria-label="Foto ampliada" onClick={(e) => { if (e.target === e.currentTarget) onCerrar() }}
+      onTouchStart={inicio} onTouchMove={mover} onTouchEnd={fin} onTouchCancel={fin}>
+      <img className={escala > 1 || dx ? '' : entrada} src={src} alt="" draggable={false}
+        style={transform ? { transform, transition: tocando ? 'none' : undefined } : undefined}
+        onDoubleClick={() => { if (Date.now() - g.current.finToque < 1000) return; if (escala > 1) { setEscala(1); setPos({ x: 0, y: 0 }) } else setEscala(2.5) }} />
+      <p className="foto-contador">{escala > 1 ? 'Toca dos veces para alejar' : `${contador ? `${contador} · ` : ''}Pellizca o toca dos veces para acercar`}</p>
+      <button className="btn btn-principal" onClick={onCerrar}>Cerrar</button>
+    </div>
+  )
 }
 
 export function Galeria({ ids, miniatura }: { ids?: string[]; miniatura?: string }) {
@@ -187,11 +270,7 @@ export function Galeria({ ids, miniatura }: { ids?: string[]; miniatura?: string
         {src ? <img key={i} className={`foto-grande ${entrada}`} style={mover} src={src} alt="" draggable={false} role="button" tabIndex={0} title={total > 1 ? 'Desliza para ver otra foto · toca para ampliar' : 'Toca para ampliar'} onClick={() => { if (!desl.fueDeslizar()) setAmpliada(true) }} onKeyDown={(e) => { if (e.key === 'Enter') setAmpliada(true) }} /> : <div className="foto-grande sin-foto" style={mover}>{ICONOS.camara}</div>}
       </div>
       {ampliada && src && (
-        <div className="foto-ampliada" role="dialog" aria-label="Foto ampliada" onClick={() => { if (!desl.fueDeslizar()) setAmpliada(false) }} {...desl.eventos}>
-          <img key={i} className={entrada} src={src} alt="" style={mover} draggable={false} />
-          {total > 1 && <p className="foto-contador">{i + 1} de {total}</p>}
-          <button className="btn btn-principal" onClick={() => setAmpliada(false)}>Cerrar</button>
-        </div>
+        <FotoAmpliada key={i} src={src} entrada={entrada} contador={total > 1 ? `${i + 1} de ${total}` : ''} ir={desl.ir} onCerrar={() => setAmpliada(false)} />
       )}
       {total > 1 && (
         <div className="fila">

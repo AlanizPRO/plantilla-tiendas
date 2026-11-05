@@ -152,7 +152,7 @@ label.campo { display: flex; flex-direction: column; gap: 6px; font-weight: 700;
 
 /* Fotos grandes */
 .galeria { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.galeria-marco { width: 100%; overflow: hidden; border-radius: 16px; touch-action: pan-y; }
+.galeria-marco { width: 100%; overflow: hidden; border-radius: 16px; touch-action: pan-y pinch-zoom; }
 .foto-grande { width: 100%; transition: transform .2s ease; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; aspect-ratio: 1; object-fit: contain; border-radius: 16px; background: var(--gris-suave); }
 .entra-derecha { animation: foto-entra-derecha .45s cubic-bezier(.22,.8,.3,1); }
 .entra-izquierda { animation: foto-entra-izquierda .45s cubic-bezier(.22,.8,.3,1); }
@@ -211,8 +211,10 @@ label.campo { display: flex; flex-direction: column; gap: 6px; font-weight: 700;
 .logo img, img.logo { width: 44px; height: 44px; border-radius: 12px; object-fit: contain; background: #fff; }
 /* Foto ampliada: toca la foto del reloj para verla completa */
 .foto-ampliada { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 16px; }
-.foto-ampliada { touch-action: pan-y; }
-.foto-contador { color: #fff; margin: 0; font-weight: 700; }
+.foto-ampliada { touch-action: none; overflow: hidden; }
+.foto-ampliada img { position: relative; z-index: 1; }
+.foto-ampliada .foto-contador, .foto-ampliada .btn { position: relative; z-index: 2; }
+.foto-contador { color: #fff; margin: 0; font-weight: 700; font-size: .85rem; opacity: .85; text-align: center; }
 .foto-ampliada img { transition: transform .2s ease; user-select: none; -webkit-user-select: none; max-width: 100%; max-height: 82vh; object-fit: contain; border-radius: 12px; background: #fff; }
 .foto-grande { cursor: zoom-in; }
 /* Cámara con encuadre cuadrado */
