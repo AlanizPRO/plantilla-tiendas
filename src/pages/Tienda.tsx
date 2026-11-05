@@ -12,6 +12,7 @@ import Ajustes from './Ajustes'
 import Equipo from './Equipo'
 import Gastos from './Gastos'
 import CajaChica from './CajaChica'
+import ResumenMes from './ResumenMes'
 import { Avatar, CambiarFoto } from './MiFoto'
 import Tablero from './Tablero'
 import Inicio from './Inicio'
@@ -19,7 +20,7 @@ import Inventario from './Inventario'
 import Ventas from './Ventas'
 import Vitrinas from './Vitrinas'
 
-type Vista = 'inicio' | 'vitrinas' | 'inventario' | 'ventas' | 'mas' | 'equipo' | 'ajustes' | 'gastos' | 'tablero' | 'caja'
+type Vista = 'inicio' | 'vitrinas' | 'inventario' | 'ventas' | 'mas' | 'equipo' | 'ajustes' | 'gastos' | 'tablero' | 'caja' | 'resumen'
 
 // Lo que comparten todas las pantallas de la tienda.
 export type Contexto = {
@@ -58,7 +59,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
     ...(tiene('selecciones') || tiene('proformas') ? [{ id: 'ventas', nombre: 'Ventas', icono: 'ventas', punto: respondidas.length > 0 }] : []),
     { id: 'mas', nombre: 'Más', icono: 'mas' },
   ]
-  const actual = ['equipo', 'ajustes', 'gastos', 'tablero', 'caja'].includes(vista) ? 'mas' : vista
+  const actual = ['equipo', 'ajustes', 'gastos', 'tablero', 'caja', 'resumen'].includes(vista) ? 'mas' : vista
   const miPerfil = useDoc<{ foto?: string }>(admin ? null : `usuarios/${ctx.uid}`)
 
   return (
@@ -74,6 +75,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
           {vista === 'equipo' && admin && <Equipo />}
           {vista === 'gastos' && admin && <Gastos ctx={ctx} />}
           {vista === 'caja' && admin && <CajaChica ctx={ctx} />}
+          {vista === 'resumen' && <ResumenMes ctx={ctx} />}
           {vista === 'tablero' && <Tablero ctx={ctx} />}
           {vista === 'ajustes' && admin && <Ajustes key={ajustesCargados ? 'cargado' : 'inicial'} ajustes={ajustes} productos={productos} vitrinas={vitrinas} />}
           {vista === 'mas' && (
@@ -83,6 +85,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
               {!admin && <CambiarFoto uid={ctx.uid} foto={miPerfil?.foto} />}
               <div className="lista">
                 {admin && <Opcion icono="equipo" titulo="Colaboradores" texto="Invitar y quitar colaboradores" onClick={() => ir('equipo')} />}
+                <Opcion icono="ventas" titulo="Resumen del mes" texto="Ventas del mes y, para el dueño, caja y efectivo" onClick={() => ir('resumen')} />
                 <Opcion icono="ventas" titulo="Tablero de ventas" texto="Proforma, aceptada, en reparto y finalizada" onClick={() => ir('tablero')} />
                 {admin && <Opcion icono="inicio" titulo="Caja chica" texto="Entradas, salidas y saldo del efectivo" onClick={() => ir('caja')} />}
                 {admin && <Opcion icono="inicio" titulo="Gastos y ganancia" texto="Renta, salarios y ganancia real del mes" onClick={() => ir('gastos')} />}
