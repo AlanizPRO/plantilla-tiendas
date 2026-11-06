@@ -79,7 +79,7 @@ export const valorInventario = (productos: Producto[]) => productos.filter((p) =
 export default function Inventario({ ctx, nuevo: abrirNuevo }: { ctx: Contexto; nuevo?: boolean }) {
   const f = useFiltro(ctx.productos)
   const [abierto, setAbierto] = useState<string | null>(null)
-  const [nuevo, setNuevo] = useState(!!abrirNuevo && ctx.admin)
+  const [nuevo, setNuevo] = useState(!!abrirNuevo)
   const [eligiendo, setEligiendo] = useState(false)
   const [elegidos, setElegidos] = useState<string[]>([])
   const [moviendo, setMoviendo] = useState(false)
@@ -96,12 +96,12 @@ export default function Inventario({ ctx, nuevo: abrirNuevo }: { ctx: Contexto; 
           {ctx.admin && <p className="suave chico">Valor del inventario (solo tú lo ves): <b>{dinero(valorInventario(ctx.productos), ctx.ajustes.moneda)}</b></p>}</div>
         <div className="fila">
           {ctx.productos.length > 0 && <button className="btn btn-borde" onClick={() => { if (eligiendo) salir(); else { setEligiendo(true); setAviso('') } }}>{eligiendo ? 'Cancelar' : 'Mover varios'}</button>}
-          {ctx.admin && !eligiendo && <button className="btn btn-principal" onClick={() => setNuevo(true)}>+ Nuevo</button>}
+          {!eligiendo && <button className="btn btn-principal" onClick={() => setNuevo(true)}>+ Nuevo</button>}
         </div>
       </div>
       <Filtros f={f} estilos={ctx.ajustes.estilos} />
       {aviso && <p className="ok">{aviso}</p>}
-      {f.lista.length === 0 && <Vacio>{ctx.productos.length === 0 ? `Todavía no hay ${T.productos}.${ctx.admin ? ' Toca "+ Nuevo" para agregar con foto.' : ''}` : 'No hay nada con ese filtro.'}</Vacio>}
+      {f.lista.length === 0 && <Vacio>{ctx.productos.length === 0 ? `Todavía no hay ${T.productos}. Toca "+ Nuevo" para agregar con foto.` : 'No hay nada con ese filtro.'}</Vacio>}
       <div className="rejilla">
         {f.lista.map((p) => <Tarjeta key={p.id} p={p} ctx={ctx} marcado={eligiendo ? elegidos.includes(p.id) : undefined}
           onClick={() => eligiendo ? setElegidos((v) => v.includes(p.id) ? v.filter((x) => x !== p.id) : [...v, p.id]) : setAbierto(p.id)} />)}
@@ -417,8 +417,8 @@ function FormProducto({ ctx, p, onCerrar }: { ctx: Contexto; p?: Producto; onCer
         ...lugar, actualizado: serverTimestamp(),
       }
       if (p) await updateDoc(ref, datos)
-      else await setDoc(ref, { ...datos, creado: serverTimestamp() })
-      if (costo !== null) await setDoc(doc(db, 'costos', ref.id), { costo: Number(costo) || 0 })
+      else await setDoc(ref, { ...datos, creado: serverTimestamp(), creadoPor: ctx.uid, creadoPorNombre: ctx.nombre })
+      if (costo !== null && ctx.admin) await setDoc(doc(db, 'costos', ref.id), { costo: Number(costo) || 0 })
       onCerrar()
     } catch (e) { setError(mensajeError(e)); setGuardando(false) }
   }

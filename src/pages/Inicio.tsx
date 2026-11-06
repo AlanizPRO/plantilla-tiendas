@@ -45,7 +45,7 @@ export default function Inicio({ ctx, selecciones, onIr }: { ctx: Contexto; sele
         <div className="fila">
           {tiene('selecciones') && <button className="btn btn-principal" onClick={() => onIr('ventas', 'nueva-seleccion')}>Nueva selección</button>}
           {tiene('proformas') && <button className="btn btn-borde" onClick={() => onIr('ventas', 'nueva-proforma')}>Nueva proforma</button>}
-          {admin && <button className="btn btn-borde" onClick={() => onIr('inventario', 'nuevo')}>{T.nuevoProducto}</button>}
+          <button className="btn btn-borde" onClick={() => onIr('inventario', 'nuevo')}>{T.nuevoProducto}</button>
         </div>
       </div>
 

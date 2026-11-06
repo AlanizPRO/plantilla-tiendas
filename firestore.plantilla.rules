@@ -31,7 +31,13 @@ service cloud.firestore {
 
     match /productos/{id} {
       allow read: if esEquipo();
-      allow create, delete: if esAdmin();
+      allow delete: if esAdmin();
+      // Los colaboradores también agregan productos nuevos (sin costo, que va aparte), pero no los venden al crearlos.
+      allow create: if esAdmin() || (esVendedor()
+        && request.resource.data.keys().hasOnly(['marca', 'modelo', 'codigo', 'estilo', 'material', 'color', 'descripcion', 'precio', 'fotos', 'miniatura', 'estado', 'vitrinaId', 'segmento', 'actualizado', 'creado', 'creadoPor', 'creadoPorNombre'])
+        && request.resource.data.creadoPor == request.auth.uid
+        && request.resource.data.precio is number && request.resource.data.precio > 0
+        && request.resource.data.estado in ['exhibicion', 'bodega', 'apartado']);
       // Los vendedores pueden mover, apartar, vender y cambiar fotos; el dueño cambia todo.
       allow update: if esAdmin() || (esVendedor()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'vitrinaId', 'segmento', 'actualizado', 'vendidoEn', 'fotos', 'miniatura', 'estadoAntes']));
