@@ -263,3 +263,7 @@ button.pill { border: 0; cursor: pointer; }
 .fondo-nombre { flex: 1; min-width: 0; display: grid; font-weight: 700; font-size: .9rem; }
 .fondo-fila .btn { flex: none; }
 .cat-equipo { display: grid; gap: 6px; text-align: center; }
+.cat-recomendado { text-align: center; display: grid; gap: 4px; justify-items: center; }
+.cat-etiqueta { text-transform: uppercase; letter-spacing: .14em; font-weight: 800; font-size: .72rem; color: color-mix(in srgb, var(--acento) 60%, #000); }
+.cat-recomendado h2 { font-family: "Playfair Display", Georgia, serif; }
+.cat-ver-todo { width: 100%; margin: 6px 0 18px; }
