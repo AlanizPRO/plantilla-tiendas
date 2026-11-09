@@ -1,10 +1,12 @@
 import { doc, setDoc } from 'firebase/firestore'
 import { useState } from 'react'
 import { cargarInventarioInicial, inventarioInicial, marcarCargado, piezasDelExcelSinTocar, quitarRepetidos, repetidosDelExcel } from '../cargaInicial'
-import { mensajeError, type Ajustes as TAjustes, type Producto, type Vitrina } from '../datos'
+import { enlaceWhatsApp, mensajeError, type Ajustes as TAjustes, type Producto, type Vitrina } from '../datos'
 import { db } from '../firebase'
 import { CALIDADES_FOTO, CALIDAD_FOTO_INICIAL } from '../fotos'
 import { T } from '../textos'
+import { ICONOS } from '../iconos'
+import { TEMAS, fechasTema, temaActual } from '../temasCatalogo'
 import BotonRespaldo from './BotonRespaldo'
 
 export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAjustes; productos: Producto[]; vitrinas: Vitrina[] }) {
@@ -63,6 +65,7 @@ export default function Ajustes({ ajustes, productos, vitrinas }: { ajustes: TAj
         </div>
         <label className="campo" htmlFor="a-nota">Nota al pie<textarea id="a-nota" value={a.notaProforma} onChange={(e) => poner('notaProforma', e.target.value)} placeholder="Ej. Aceptamos tarjeta y transferencia." /></label>
       </div>
+      <Catalogo a={a} poner={poner} />
       <div className="panel">
         <h3>Aviso de ventas</h3>
         <p className="suave chico">Cuando un vendedor registra una venta, le sale un botón para avisarte por WhatsApp con el mensaje ya escrito. Si lo dejas vacío, se usa el teléfono de la tienda.</p>
@@ -133,6 +136,35 @@ function RecargarExcel({ ajustes, productos, vitrinas }: { ajustes: TAjustes; pr
       <p className="suave chico">El Excel trae {filas} filas. Si algo salió mal (precios, repetidos), vuelve a cargarlo. Antes, si cambiaste el Excel, súbelo otra vez en la Super App y actualiza la app.</p>
       {estado && estado !== 'cargando' && <p className="ok">{estado}</p>}
       <button className="btn btn-borde" disabled={estado === 'cargando'} onClick={recargar}>{estado === 'cargando' ? 'Cargando…' : 'Volver a cargar el inventario del Excel'}</button>
+    </div>
+  )
+}
+
+// Catálogo en línea: encenderlo, elegir el fondo de temporada y compartir el enlace.
+function Catalogo({ a, poner }: { a: TAjustes; poner: <K extends keyof TAjustes>(k: K, v: TAjustes[K]) => void }) {
+  const url = `${location.origin}/catalogo`
+  const elegido = a.catalogoTema ?? 'auto'
+  const hoy = temaActual(elegido)
+  const verTema = elegido === 'auto' || elegido === 'ninguno' ? url : `${url}?tema=${elegido}`
+  return (
+    <div className="panel">
+      <h3>Catálogo en línea</h3>
+      <p className="suave chico">Una página con las fotos y precios de lo que está en exhibición y en bodega (no salen los vendidos ni los apartados), para mandársela a tus clientes. Se actualiza sola cuando agregas o vendes.</p>
+      <label className="fila" htmlFor="a-catalogo"><input id="a-catalogo" type="checkbox" checked={!!a.catalogo} onChange={(e) => poner('catalogo', e.target.checked)} /> Catálogo encendido</label>
+      <label className="fila" htmlFor="a-cat-precios"><input id="a-cat-precios" type="checkbox" checked={a.catalogoPrecios !== false} onChange={(e) => poner('catalogoPrecios', e.target.checked)} /> Mostrar precios</label>
+      <label className="campo" htmlFor="a-cat-tema">Fondo de la página
+        <select id="a-cat-tema" value={elegido} onChange={(e) => poner('catalogoTema', e.target.value)}>
+          <option value="auto">Automático según la fecha</option>
+          <option value="ninguno">Sin fondo especial (colores de la tienda)</option>
+          {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+        </select>
+      </label>
+      {elegido === 'auto' && <p className="suave chico">Hoy se ve: <b>{hoy ? hoy.nombre : 'sin fondo especial'}</b>. Fechas: {TEMAS.map((t) => `${t.nombre} ${fechasTema(t)}`).join(' · ')}.</p>}
+      <p className="suave chico">Después de cambiar algo, toca <b>Guardar</b> abajo.</p>
+      <div className="fila">
+        <a className="btn btn-borde" href={verTema} target="_blank" rel="noreferrer">{ICONOS.enlace}Ver catálogo</a>
+        <a className="btn btn-whatsapp" href={enlaceWhatsApp('', `Mira nuestro catálogo de ${a.nombreTienda}: ${url}`)} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Compartir</a>
+      </div>
     </div>
   )
 }

@@ -91,6 +91,7 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
               <div className="lista">
                 {admin && <Opcion icono="equipo" titulo="Colaboradores" texto="Invitar y quitar colaboradores" onClick={() => ir('equipo')} />}
                 <Opcion icono="ventas" titulo="Resumen del mes" texto="Ventas del mes y, para el dueño, caja y efectivo" onClick={() => ir('resumen')} />
+                {ajustes.catalogo && <Opcion icono="enlace" titulo="Catálogo en línea" texto="Ver o compartir el catálogo con tus clientes" onClick={() => window.open('/catalogo', '_blank')} />}
                 <Opcion icono="ventas" titulo="Tablero de ventas" texto="Proforma, aceptada, en reparto y finalizada" onClick={() => ir('tablero')} />
                 <Opcion icono="inicio" titulo="Caja chica" texto="Entradas, salidas y saldo del efectivo" onClick={() => ir('caja')} />
                 <Opcion icono="ventas" titulo="Servicios y accesorios" texto="Cobros de reparación y venta de baterías, tornillos" onClick={() => ir('servicios')} />

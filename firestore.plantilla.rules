@@ -29,8 +29,14 @@ service cloud.firestore {
       allow delete: if esAdmin();
     }
 
+    // Catálogo en línea: el dueño lo enciende en Ajustes (catalogo = true).
+    function catalogoAbierto() {
+      return get(/databases/$(database)/documents/ajustes/general).data.get('catalogo', false) == true;
+    }
+
     match /productos/{id} {
-      allow read: if esEquipo();
+      // El equipo ve todo. Con el catálogo encendido, cualquiera ve los que están disponibles (en exhibición o en bodega).
+      allow read: if esEquipo() || (catalogoAbierto() && resource.data.estado in ['exhibicion', 'bodega']);
       allow delete: if esAdmin();
       // Los colaboradores también agregan productos nuevos (sin costo, que va aparte), pero no los venden al crearlos.
       allow create: if esAdmin() || (esVendedor()

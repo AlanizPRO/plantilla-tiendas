@@ -43,6 +43,10 @@ export type Ajustes = {
   fotoKB?: number
   // WhatsApp del dueño para el aviso de cada venta (si está vacío se usa el teléfono de la tienda).
   whatsappAvisos?: string
+  // Catálogo en línea (/catalogo): encendido, fondo ('auto', 'ninguno' o un tema de temasCatalogo.ts) y si muestra precios.
+  catalogo?: boolean
+  catalogoTema?: string
+  catalogoPrecios?: boolean
 }
 
 export const AJUSTES_INICIALES: Ajustes = {

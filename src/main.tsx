@@ -4,6 +4,7 @@ import './estilos.css'
 import App from './App'
 import SeleccionPublica from './publico/SeleccionPublica'
 import ProformaPublica from './publico/ProformaPublica'
+import CatalogoPublico from './publico/CatalogoPublico'
 import { cliente } from './cliente'
 import { guardarInvitacionDeLaUrl } from './sesion'
 
@@ -28,6 +29,7 @@ raiz.setProperty('--sobre-acento', letrasPara(cliente.colorAcento, elegidos[1]))
 const [, tipo, codigo] = location.pathname.split('/')
 const pagina = tipo === 's' && codigo ? <SeleccionPublica codigo={codigo} />
   : tipo === 'p' && codigo ? <ProformaPublica codigo={codigo} />
+  : tipo === 'catalogo' ? <CatalogoPublico />
   : <App />
 if (pagina.type === App) guardarInvitacionDeLaUrl()
 
