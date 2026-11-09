@@ -1,9 +1,9 @@
-import { doc, setDoc } from 'firebase/firestore'
+import { deleteDoc, deleteField, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { useState } from 'react'
 import { cargarInventarioInicial, inventarioInicial, marcarCargado, piezasDelExcelSinTocar, quitarRepetidos, repetidosDelExcel } from '../cargaInicial'
 import { enlaceWhatsApp, mensajeError, type Ajustes as TAjustes, type Producto, type Vitrina } from '../datos'
 import { db } from '../firebase'
-import { CALIDADES_FOTO, CALIDAD_FOTO_INICIAL } from '../fotos'
+import { CALIDADES_FOTO, CALIDAD_FOTO_INICIAL, prepararFondo } from '../fotos'
 import { T } from '../textos'
 import { ICONOS } from '../iconos'
 import { TEMAS, fechasTema, temaActual } from '../temasCatalogo'
@@ -144,7 +144,7 @@ function RecargarExcel({ ajustes, productos, vitrinas }: { ajustes: TAjustes; pr
 function Catalogo({ a, poner }: { a: TAjustes; poner: <K extends keyof TAjustes>(k: K, v: TAjustes[K]) => void }) {
   const url = `${location.origin}/catalogo`
   const elegido = a.catalogoTema ?? 'auto'
-  const hoy = temaActual(elegido)
+  const hoy = temaActual(elegido, new Date(), !!a.catalogoFondos?.propio)
   const verTema = elegido === 'auto' || elegido === 'ninguno' ? url : `${url}?tema=${elegido}`
   return (
     <div className="panel">
@@ -159,12 +159,59 @@ function Catalogo({ a, poner }: { a: TAjustes; poner: <K extends keyof TAjustes>
           {TEMAS.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
         </select>
       </label>
-      {elegido === 'auto' && <p className="suave chico">Hoy se ve: <b>{hoy ? hoy.nombre : 'sin fondo especial'}</b>. Fechas: {TEMAS.map((t) => `${t.nombre} ${fechasTema(t)}`).join(' · ')}.</p>}
+      {elegido === 'auto' && <p className="suave chico">Hoy se ve: <b>{hoy ? hoy.nombre : 'sin fondo especial'}</b>. Fechas: {TEMAS.filter((t) => t.desde).map((t) => `${t.nombre} ${fechasTema(t)}`).join(' · ')}. Fuera de esas fechas se usa "Mi foto" si la subiste.</p>}
+      <label className="campo" htmlFor="a-cat-mensaje">Mensaje de la portada (opcional)
+        <input id="a-cat-mensaje" value={a.catalogoMensaje ?? ''} maxLength={80} onChange={(e) => poner('catalogoMensaje', e.target.value)} placeholder={hoy?.mensaje ?? 'Ej.: Nueva colección de temporada'} />
+      </label>
+      <FotosDeFondo fotos={a.catalogoFondos ?? {}} onCambio={(f) => poner('catalogoFondos', f)} />
       <p className="suave chico">Después de cambiar algo, toca <b>Guardar</b> abajo.</p>
       <div className="fila">
         <a className="btn btn-borde" href={verTema} target="_blank" rel="noreferrer">{ICONOS.enlace}Ver catálogo</a>
         <a className="btn btn-whatsapp" href={enlaceWhatsApp('', `Mira nuestro catálogo de ${a.nombreTienda}: ${url}`)} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Compartir</a>
       </div>
+    </div>
+  )
+}
+
+// Fotos propias de fondo: una por tema (Navidad, San Valentín…) o "Mi foto" para todo el año.
+// La foto grande va en fondos/{tema}; en Ajustes queda solo la miniatura para mostrarla aquí.
+function FotosDeFondo({ fotos, onCambio }: { fotos: Record<string, string>; onCambio: (f: Record<string, string>) => void }) {
+  const [estado, setEstado] = useState('')
+  async function subir(id: string, archivo: File | undefined) {
+    if (!archivo) return
+    setEstado(`Subiendo la foto de ${TEMAS.find((t) => t.id === id)?.nombre}…`)
+    try {
+      const { imagen, miniatura } = await prepararFondo(archivo)
+      await setDoc(doc(db, 'fondos', id), { imagen, actualizado: serverTimestamp() })
+      await setDoc(doc(db, 'ajustes', 'general'), { catalogoFondos: { [id]: miniatura } }, { merge: true })
+      onCambio({ ...fotos, [id]: miniatura })
+      setEstado('Listo: ya sale en el catálogo.')
+    } catch (e) { setEstado(mensajeError(e)) }
+  }
+  async function quitar(id: string) {
+    if (!confirm('¿Quitar esta foto? Vuelve el fondo dibujado.')) return
+    try {
+      await deleteDoc(doc(db, 'fondos', id))
+      await updateDoc(doc(db, 'ajustes', 'general'), { [`catalogoFondos.${id}`]: deleteField() })
+      const resto = { ...fotos }; delete resto[id]
+      onCambio(resto)
+      setEstado('')
+    } catch (e) { setEstado(mensajeError(e)) }
+  }
+  return (
+    <div className="fondos-propios">
+      <b>Tus fotos de fondo</b>
+      <p className="suave chico">Si subes una foto para un tema, el catálogo la usa en vez del dibujo. Usa fotos horizontales y con buena luz.</p>
+      {TEMAS.map((t) => (
+        <div key={t.id} className="fondo-fila">
+          {fotos[t.id] ? <img src={fotos[t.id]} alt="" /> : <span className="fondo-muestra" style={{ backgroundImage: `${t.adornos}, ${t.fondo}`, backgroundSize: '120px 120px, cover' }} />}
+          <span className="fondo-nombre">{t.nombre}<small className="suave">{fotos[t.id] ? 'Con tu foto' : 'Dibujo'}</small></span>
+          <label className="btn btn-borde btn-chico">{fotos[t.id] ? 'Cambiar' : 'Subir foto'}
+            <input type="file" accept="image/*" hidden onChange={(e) => { subir(t.id, e.target.files?.[0]); e.target.value = '' }} /></label>
+          {fotos[t.id] && <button className="btn btn-borde btn-chico" onClick={() => quitar(t.id)}>Quitar</button>}
+        </div>
+      ))}
+      {estado && <p className="suave chico" role="status">{estado}</p>}
     </div>
   )
 }

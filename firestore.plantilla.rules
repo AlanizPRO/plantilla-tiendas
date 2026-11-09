@@ -22,6 +22,12 @@ service cloud.firestore {
       allow write: if esAdmin();
     }
 
+    // Fotos de fondo del catálogo (una por tema): las ve cualquiera; solo el dueño las cambia.
+    match /fondos/{id} {
+      allow get: if true;
+      allow list, write: if esAdmin();
+    }
+
     // El equipo crea vitrinas y segmentos; solo el dueño las borra.
     match /vitrinas/{id} {
       allow read: if esEquipo();

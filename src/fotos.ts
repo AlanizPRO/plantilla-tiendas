@@ -109,3 +109,11 @@ export async function prepararFoto(archivo: File) {
     miniatura: comprimir(dibujar(sinFondo, 220, true), 14_000),
   }
 }
+
+// Foto de fondo del catálogo: ancha y liviana (se ve detrás de los relojes), hasta ~600 KB, y una miniatura para Ajustes.
+export async function prepararFondo(archivo: File) {
+  const img = await cargar(archivo)
+  let imagen = comprimir(dibujar(img, 1800, false), 600_000, 0.8)
+  if (imagen.length * 0.75 > 600_000) imagen = comprimir(dibujar(img, 1200, false), 600_000, 0.75)
+  return { imagen, miniatura: comprimir(dibujar(img, 160, true), 9_000) }
+}

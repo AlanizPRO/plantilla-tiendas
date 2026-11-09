@@ -236,8 +236,29 @@ label.campo { display: flex; flex-direction: column; gap: 6px; font-weight: 700;
 .fila-titulo { display: flex; align-items: center; gap: 6px; }
 
 /* Catálogo en línea con fondo de temporada */
-.catalogo-fondo { min-height: 100vh; background-repeat: repeat; background-size: 140px 140px, cover; }
-.catalogo-fondo .app { padding-top: 14px; }
-.catalogo-fondo .top.panel { margin: 0; }
-.banner-tema { text-align: center; font-size: 1.15rem; }
+.catalogo-fondo { position: relative; min-height: 100vh; isolation: isolate; }
+.catalogo-fondo .app { padding-top: 0; }
+/* Capas fijas detrás de todo (funciona también en iPhone, donde background-attachment: fixed no sirve). */
+.cat-capa { position: fixed; inset: 0; z-index: -2; background-size: cover; background-repeat: no-repeat; }
+.cat-adornos { z-index: -1; background-size: 240px 240px; background-repeat: repeat; }
+.cat-portada { position: relative; text-align: center; padding: 96px 12px 26px; display: grid; justify-items: center; gap: 6px; }
+.cat-colgantes { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(100%, 560px); height: auto; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.25)); }
+.cat-marca { display: flex; align-items: center; gap: 10px; font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: 1.05rem; letter-spacing: .14em; text-transform: uppercase; }
+.cat-marca .logo { width: 46px; height: 46px; box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.cat-titulo { font-family: "Great Vibes", "Brush Script MT", cursive; font-weight: 400; font-size: clamp(3rem, 12vw, 5.2rem); line-height: 1.05; letter-spacing: 0; text-shadow: 0 3px 18px rgba(0,0,0,.28); margin-top: 4px; }
+.cat-titulo-tienda { font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: clamp(2.2rem, 8vw, 3.4rem); }
+.cat-mensaje { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 1.15rem; opacity: .92; max-width: 30ch; }
+.cat-raya { width: 120px; height: 10px; margin-top: 6px; background: radial-gradient(circle, var(--acento) 0 3px, transparent 3.5px) center / 10px 10px no-repeat, linear-gradient(90deg, transparent, var(--acento) 30%, var(--acento) 70%, transparent) center / 100% 1px no-repeat; }
+.catalogo-fondo:not(.con-tema) .cat-portada { color: var(--fg); padding-top: 34px; }
+.con-tema .panel { background: rgba(255,255,255,.93); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-color: rgba(255,255,255,.6); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.con-tema .rejilla { gap: 14px; }
+.con-tema .tarjeta { border: 0; padding: 10px 10px 12px; box-shadow: 0 12px 28px rgba(0,0,0,.28); transition: transform .2s ease, box-shadow .2s ease; }
+.con-tema .tarjeta:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(0,0,0,.34); }
+.con-tema .tarjeta b { font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: .95rem; }
+.cat-precio { align-self: flex-start; margin-top: 2px; padding: 2px 10px; border-radius: 999px; font-weight: 800; font-size: .85rem; background: color-mix(in srgb, var(--acento) 18%, #fff); color: color-mix(in srgb, var(--acento) 55%, #000); border: 1px solid color-mix(in srgb, var(--acento) 45%, #fff); }
 button.pill { border: 0; cursor: pointer; }
+.fondos-propios { display: grid; gap: 8px; margin: 6px 0 4px; }
+.fondo-fila { display: flex; align-items: center; gap: 10px; }
+.fondo-fila img, .fondo-muestra { width: 54px; height: 40px; border-radius: 8px; object-fit: cover; flex: none; background-size: cover; border: 1px solid var(--linea); }
+.fondo-nombre { flex: 1; min-width: 0; display: grid; font-weight: 700; font-size: .9rem; }
+.fondo-fila .btn { flex: none; }

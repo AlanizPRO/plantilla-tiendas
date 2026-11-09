@@ -47,6 +47,8 @@ export type Ajustes = {
   catalogo?: boolean
   catalogoTema?: string
   catalogoPrecios?: boolean
+  catalogoMensaje?: string                    // mensaje propio de la portada (si está vacío, el del tema)
+  catalogoFondos?: Record<string, string>     // temas con foto propia: id del tema → miniatura (la foto grande va en fondos/{id})
 }
 
 export const AJUSTES_INICIALES: Ajustes = {
