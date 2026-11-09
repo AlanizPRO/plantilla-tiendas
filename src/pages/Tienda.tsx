@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { cargarInventarioInicial, inventarioInicial, marcarCargado } from '../cargaInicial'
 import { cliente, tiene } from '../cliente'
 import { Barra, Encabezado, type Pestana } from '../componentes'
-import { col, todos, useAjustesConEstado, useDoc, useLista, type Ajustes as TAjustes, type Producto, type Seleccion, type Vitrina } from '../datos'
+import { col, enlaceWhatsApp, todos, useAjustesConEstado, useDoc, useLista, type Ajustes as TAjustes, type Producto, type Seleccion, type Vitrina } from '../datos'
 import { ponerCalidadFotos } from '../fotos'
 import { ICONOS } from '../iconos'
 import { salir } from '../sesion'
@@ -91,7 +91,8 @@ export default function Tienda({ usuario, admin, nombre, telefono, botonTema }: 
               <div className="lista">
                 {admin && <Opcion icono="equipo" titulo="Colaboradores" texto="Invitar y quitar colaboradores" onClick={() => ir('equipo')} />}
                 <Opcion icono="ventas" titulo="Resumen del mes" texto="Ventas del mes y, para el dueño, caja y efectivo" onClick={() => ir('resumen')} />
-                {ajustes.catalogo && <Opcion icono="enlace" titulo="Catálogo en línea" texto="Ver o compartir el catálogo con tus clientes" onClick={() => window.open('/catalogo', '_blank')} />}
+                {ajustes.catalogo && <Opcion icono="enlace" titulo="Catálogo en línea" texto="Verlo como lo ve el cliente" onClick={() => window.open('/catalogo', '_blank')} />}
+                {ajustes.catalogo && <Opcion icono="whatsapp" titulo="Enviar catálogo a un cliente" texto="Manda el enlace del catálogo por WhatsApp" onClick={() => window.open(enlaceWhatsApp('', `Hola, te comparto nuestro catálogo de ${ajustes.nombreTienda}. Ahí puedes ver lo que tenemos disponible con sus fotos${ajustes.catalogoPrecios !== false ? ' y precios' : ''}: ${location.origin}/catalogo`), '_blank')} />}
                 <Opcion icono="ventas" titulo="Tablero de ventas" texto="Proforma, aceptada, en reparto y finalizada" onClick={() => ir('tablero')} />
                 <Opcion icono="inicio" titulo="Caja chica" texto="Entradas, salidas y saldo del efectivo" onClick={() => ir('caja')} />
                 <Opcion icono="ventas" titulo="Servicios y accesorios" texto="Cobros de reparación y venta de baterías, tornillos" onClick={() => ir('servicios')} />

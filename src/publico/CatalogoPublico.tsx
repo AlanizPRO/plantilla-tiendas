@@ -2,7 +2,8 @@ import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firesto
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Hoja, Logo } from '../componentes'
 import { AJUSTES_INICIALES, dinero, enlaceWhatsApp, nombreProducto, type Ajustes, type Producto } from '../datos'
-import { db } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth, db } from '../firebase'
 import { ICONOS } from '../iconos'
 import { Galeria } from '../pages/Inventario'
 import { temaActual, type Colgante } from '../temasCatalogo'
@@ -18,6 +19,9 @@ export default function CatalogoPublico() {
   const [estilo, setEstilo] = useState('')
   const [abierto, setAbierto] = useState<Producto | null>(null)
   const [foto, setFoto] = useState('')
+  // Si quien abre el catálogo tiene sesión en la app (dueño o colaborador), ve botones para mandarlo a sus clientes.
+  const [equipo, setEquipo] = useState(false)
+  useEffect(() => onAuthStateChanged(auth, (u) => setEquipo(!!u)), [])
 
   useEffect(() => {
     getDoc(doc(db, 'ajustes', 'general'))
@@ -59,6 +63,9 @@ export default function CatalogoPublico() {
 
   const meInteresa = (p: Producto) => `Hola, me interesa ${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''}${p.color ? `, color ${p.color}` : ''} que vi en el catálogo.`
 
+  const enlace = `${location.origin}/catalogo`
+  const textoCatalogo = `Hola, te comparto nuestro catálogo de ${ajustes.nombreTienda}. Ahí puedes ver lo que tenemos disponible con sus fotos${precios ? ' y precios' : ''}: ${enlace}`
+  const textoReloj = (p: Producto) => `Hola, te comparto esto: ${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''}${p.color ? `, color ${p.color}` : ''}${precios ? `, ${dinero(p.precio, ajustes.moneda)}` : ''}. Puedes ver más en nuestro catálogo: ${enlace}`
   const mensaje = ajustes.catalogoMensaje?.trim() || tema?.mensaje || 'Nuestra colección'
   const color = foto ? '#ffffff' : tema?.texto
   const capa = foto ? { background: `linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.55)), url(${foto}) center / cover` }
@@ -76,6 +83,12 @@ export default function CatalogoPublico() {
           <p className="cat-mensaje">{mensaje}</p>
           <span className="cat-raya" aria-hidden="true" />
         </header>
+        {equipo && (
+          <div className="panel cat-equipo">
+            <a className="btn btn-whatsapp" href={enlaceWhatsApp('', textoCatalogo)} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Enviar catálogo a un cliente</a>
+            <small className="suave">Solo tú ves este botón porque entraste con tu cuenta. Tus clientes ven el catálogo sin él.</small>
+          </div>
+        )}
         <div className="panel">
           <h1>Catálogo</h1>
           <p className="suave">{lista.length} {lista.length === 1 ? T.producto : T.productos} disponibles. Toca uno para ver sus fotos.</p>
@@ -99,7 +112,12 @@ export default function CatalogoPublico() {
             </button>
           ))}
         </div>
-        {ajustes.telefono && (
+        {equipo ? (
+          <div className="panel">
+            <p>¿Ya elegiste a quién mandárselo?</p>
+            <a className="btn btn-whatsapp" href={enlaceWhatsApp('', textoCatalogo)} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Enviar catálogo a un cliente</a>
+          </div>
+        ) : ajustes.telefono && (
           <div className="panel">
             <p>¿Buscas algo que no ves aquí? Escríbenos.</p>
             <a className="btn btn-whatsapp" href={enlaceWhatsApp(ajustes.telefono, 'Hola, vi el catálogo y tengo una pregunta.')} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Escribir a la tienda</a>
@@ -113,7 +131,9 @@ export default function CatalogoPublico() {
               {[['Código', abierto.codigo], ['Estilo', abierto.estilo], ['Material', abierto.material], ['Color', abierto.color]].filter(([, v]) => v).map(([k, v]) => <p key={k}><b>{k}:</b> {v}</p>)}
               {abierto.descripcion && <p className="suave">{abierto.descripcion}</p>}
             </div>
-            {ajustes.telefono && <a className="btn btn-whatsapp" href={enlaceWhatsApp(ajustes.telefono, meInteresa(abierto))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Me interesa</a>}
+            {equipo
+              ? <a className="btn btn-whatsapp" href={enlaceWhatsApp('', textoReloj(abierto))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Enviar a un cliente</a>
+              : ajustes.telefono && <a className="btn btn-whatsapp" href={enlaceWhatsApp(ajustes.telefono, meInteresa(abierto))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Me interesa</a>}
           </Hoja>
         )}
       </div>

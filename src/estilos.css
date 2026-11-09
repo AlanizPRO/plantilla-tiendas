@@ -262,3 +262,4 @@ button.pill { border: 0; cursor: pointer; }
 .fondo-fila img, .fondo-muestra { width: 54px; height: 40px; border-radius: 8px; object-fit: cover; flex: none; background-size: cover; border: 1px solid var(--linea); }
 .fondo-nombre { flex: 1; min-width: 0; display: grid; font-weight: 700; font-size: .9rem; }
 .fondo-fila .btn { flex: none; }
+.cat-equipo { display: grid; gap: 6px; text-align: center; }
