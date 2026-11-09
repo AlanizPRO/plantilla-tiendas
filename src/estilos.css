@@ -267,3 +267,4 @@ button.pill { border: 0; cursor: pointer; }
 .cat-etiqueta { text-transform: uppercase; letter-spacing: .14em; font-weight: 800; font-size: .72rem; color: color-mix(in srgb, var(--acento) 60%, #000); }
 .cat-recomendado h2 { font-family: "Playfair Display", Georgia, serif; }
 .cat-ver-todo { width: 100%; margin: 6px 0 18px; }
+.cat-me-gusta { font-size: 1.1rem; min-height: 54px; }

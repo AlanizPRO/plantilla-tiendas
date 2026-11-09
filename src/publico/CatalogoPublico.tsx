@@ -23,7 +23,13 @@ export default function CatalogoPublico() {
   const [foto, setFoto] = useState('')
   // Si quien abre el catálogo tiene sesión en la app (dueño o colaborador), ve botones para mandarlo a sus clientes.
   const [equipo, setEquipo] = useState(false)
-  useEffect(() => onAuthStateChanged(auth, (u) => setEquipo(!!u)), [])
+  // Su WhatsApp va en el enlace de cada producto que manda (&v=…), para que el cliente le responda a él y no a la tienda.
+  const [miTelefono, setMiTelefono] = useState('')
+  useEffect(() => onAuthStateChanged(auth, (u) => {
+    setEquipo(!!u)
+    if (u) getDoc(doc(db, 'usuarios', u.uid)).then((d) => setMiTelefono(String(d.data()?.telefono ?? '').replace(/\D/g, ''))).catch(() => {})
+  }), [])
+  const telefonoVendedor = (new URLSearchParams(location.search).get('v') ?? '').replace(/\D/g, '')
 
   useEffect(() => {
     getDoc(doc(db, 'ajustes', 'general'))
@@ -63,11 +69,13 @@ export default function CatalogoPublico() {
     )
   }
 
+  const responderA = telefonoVendedor || ajustes.telefono
+  const meGusta = (p: Producto) => `¡Me gusta mucho! ${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''}${p.color ? `, color ${p.color}` : ''}${precios ? `, ${dinero(p.precio, ajustes.moneda)}` : ''}. ¿Está disponible?`
   const meInteresa = (p: Producto) => `Hola, me interesa ${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''}${p.color ? `, color ${p.color}` : ''} que vi en el catálogo.`
 
   const enlace = `${location.origin}/catalogo`
   const textoCatalogo = `Hola, te comparto nuestro catálogo de ${ajustes.nombreTienda}. Ahí puedes ver lo que tenemos disponible con sus fotos${precios ? ' y precios' : ''}: ${enlace}`
-  const textoReloj = (p: Producto) => `Hola, te comparto esto: ${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''}${p.color ? `, color ${p.color}` : ''}${precios ? `, ${dinero(p.precio, ajustes.moneda)}` : ''}. Míralo aquí: ${enlace}?reloj=${p.id}`
+  const textoReloj = (p: Producto) => `Hola, te comparto esto: ${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''}${p.color ? `, color ${p.color}` : ''}${precios ? `, ${dinero(p.precio, ajustes.moneda)}` : ''}. Míralo aquí: ${enlace}?reloj=${p.id}${miTelefono ? `&v=${miTelefono}` : ''}`
   const verTodo = () => {
     setRecomendadoId('')
     const u = new URL(location.href); u.searchParams.delete('reloj'); history.replaceState(null, '', u)
@@ -81,9 +89,15 @@ export default function CatalogoPublico() {
         {[['Código', p.codigo], ['Estilo', p.estilo], ['Material', p.material], ['Color', p.color]].filter(([, v]) => v).map(([k, v]) => <p key={k}><b>{k}:</b> {v}</p>)}
         {p.descripcion && <p className="suave">{p.descripcion}</p>}
       </div>
-      {equipo
+      {p.id === recomendadoId ? (
+        // Producto que el vendedor le recomendó: el cliente le responde a ese vendedor.
+        <>
+          {responderA && <a className="btn btn-whatsapp cat-me-gusta" href={enlaceWhatsApp(responderA, meGusta(p))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}¡Me gusta mucho!</a>}
+          {equipo && <a className="btn btn-borde" href={enlaceWhatsApp('', textoReloj(p))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Enviar a otro cliente</a>}
+        </>
+      ) : equipo
         ? <a className="btn btn-whatsapp" href={enlaceWhatsApp('', textoReloj(p))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Enviar a un cliente</a>
-        : ajustes.telefono && <a className="btn btn-whatsapp" href={enlaceWhatsApp(ajustes.telefono, meInteresa(p))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Me interesa</a>}
+        : responderA && <a className="btn btn-whatsapp" href={enlaceWhatsApp(responderA, meInteresa(p))} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Me interesa</a>}
     </>
   )
   const mensaje = ajustes.catalogoMensaje?.trim() || tema?.mensaje || 'Nuestra colección'
@@ -150,10 +164,10 @@ export default function CatalogoPublico() {
               <p>¿Ya elegiste a quién mandárselo?</p>
               <a className="btn btn-whatsapp" href={enlaceWhatsApp('', textoCatalogo)} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Enviar catálogo a un cliente</a>
             </div>
-          ) : ajustes.telefono && (
+          ) : responderA && (
             <div className="panel">
               <p>¿Buscas algo que no ves aquí? Escríbenos.</p>
-              <a className="btn btn-whatsapp" href={enlaceWhatsApp(ajustes.telefono, 'Hola, vi el catálogo y tengo una pregunta.')} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Escribir a la tienda</a>
+              <a className="btn btn-whatsapp" href={enlaceWhatsApp(responderA, 'Hola, vi el catálogo y tengo una pregunta.')} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Escribir a la tienda</a>
             </div>
           )}
           </>
