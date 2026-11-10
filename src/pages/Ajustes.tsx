@@ -166,11 +166,12 @@ function Catalogo({ a, poner }: { a: TAjustes; poner: <K extends keyof TAjustes>
       <div className="fondos-propios">
         <b>Pagos desde el catálogo</b>
         <label className="fila" htmlFor="a-cat-comprar"><input id="a-cat-comprar" type="checkbox" checked={!!a.catalogoComprar} onChange={(e) => poner('catalogoComprar', e.target.checked)} /> Botón "Comprar" en cada {T.producto}</label>
-        <p className="suave chico">Al tocarlo, el cliente ve el precio, tus cuentas (las de <b>Proformas → Formas de pago</b> y la imagen de pago) y el botón para mandar el comprobante por WhatsApp al vendedor.</p>
+        <p className="suave chico">Al tocarlo, el cliente ve el precio, tus cuentas y el botón para mandar el comprobante por WhatsApp al vendedor.</p>
+        <label className="campo" htmlFor="a-cuentas">Cuentas para transferencia<textarea id="a-cuentas" value={a.formasPago ?? ''} onChange={(e) => poner('formasPago', e.target.value)} placeholder={'Ej. BAC US$: 000000000 a nombre de la tienda\nBanpro C$: 000000000'} /></label>
         <label className="campo" htmlFor="a-tarjeta">Enlace para pagar con tarjeta (opcional)
           <input id="a-tarjeta" type="url" inputMode="url" value={a.enlaceTarjeta ?? ''} onChange={(e) => poner('enlaceTarjeta', e.target.value.trim())} placeholder="Ej. https://paypal.me/tutienda" />
         </label>
-        {a.catalogoComprar && !(a.formasPago ?? '').trim() && !a.imagenPago && !a.enlaceTarjeta && <p className="chico" style={{ color: 'var(--peligro, #c0392b)' }}>Falta poner tus cuentas en Proformas → Formas de pago, o un enlace de tarjeta.</p>}
+        {a.catalogoComprar && !(a.formasPago ?? '').trim() && !a.imagenPago && !a.enlaceTarjeta && <p className="chico" style={{ color: 'var(--peligro, #c0392b)' }}>Falta poner tus cuentas o un enlace de tarjeta.</p>}
       </div>
       <FotosDeFondo fotos={a.catalogoFondos ?? {}} onCambio={(f) => poner('catalogoFondos', f)} />
       <p className="suave chico">Después de cambiar algo, toca <b>Guardar</b> abajo.</p>
