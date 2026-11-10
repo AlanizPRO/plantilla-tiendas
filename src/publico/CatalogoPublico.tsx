@@ -18,6 +18,7 @@ export default function CatalogoPublico() {
   const [buscar, setBuscar] = useState('')
   const [estilo, setEstilo] = useState('')
   const [abierto, setAbierto] = useState<Producto | null>(null)
+  const [comprar, setComprar] = useState<Producto | null>(null)
   // Enlace de un producto recomendado por el vendedor: /catalogo?reloj=ID. Primero se ve ese, con botón para ver todo.
   const [recomendadoId, setRecomendadoId] = useState(() => new URLSearchParams(location.search).get('reloj') ?? '')
   const [foto, setFoto] = useState('')
@@ -89,6 +90,7 @@ export default function CatalogoPublico() {
         {[['Código', p.codigo], ['Estilo', p.estilo], ['Material', p.material], ['Color', p.color]].filter(([, v]) => v).map(([k, v]) => <p key={k}><b>{k}:</b> {v}</p>)}
         {p.descripcion && <p className="suave">{p.descripcion}</p>}
       </div>
+      {ajustes.catalogoComprar && <button className="btn btn-principal cat-comprar" onClick={() => { setAbierto(null); setComprar(p) }}>{ICONOS.ventas}Comprar</button>}
       {p.id === recomendadoId ? (
         // Producto que el vendedor le recomendó: el cliente le responde a ese vendedor.
         <>
@@ -172,6 +174,7 @@ export default function CatalogoPublico() {
           )}
           </>
         )}
+        {comprar && <Comprar p={comprar} ajustes={ajustes} precios={precios} responderA={responderA} onCerrar={() => setComprar(null)} />}
         {abierto && (
           <Hoja titulo={nombreProducto(abierto)} onCerrar={() => setAbierto(null)}>
             <Galeria ids={abierto.fotos} miniatura={abierto.miniatura} />
@@ -234,4 +237,67 @@ function figura(tipo: Colgante, c: string, i: number) {
         <text y={21} textAnchor="middle" fontSize="8" fontWeight="800" fill={c === '#1a1a1a' ? '#d4af37' : '#1a1a1a'}>%</text></g>
     default: return null
   }
+}
+
+// Pagar desde el catálogo: el precio, las cuentas de la tienda (texto e imagen de Formas de pago),
+// el enlace de tarjeta si hay, y el botón para mandar el comprobante por WhatsApp al vendedor.
+export function Comprar({ p, ajustes, precios, responderA, onCerrar }: { p: Producto; ajustes: Ajustes; precios: boolean; responderA: string; onCerrar: () => void }) {
+  const [imagen, setImagen] = useState('')
+  const [copiado, setCopiado] = useState(false)
+  useEffect(() => {
+    if (!ajustes.imagenPago) return
+    getDoc(doc(db, 'pagos', 'formas')).then((d) => { const i = d.data()?.imagen as string | undefined; if (i?.startsWith('data:image/')) setImagen(i) }).catch(() => {})
+  }, [ajustes.imagenPago])
+  const cuentas = (ajustes.formasPago ?? '').trim()
+  const nombre = `${nombreProducto(p)}${p.codigo ? ` (código ${p.codigo})` : ''}${p.color ? `, color ${p.color}` : ''}`
+  const total = dinero(p.precio, ajustes.moneda)
+  const tarjeta = enlaceConMonto(ajustes.enlaceTarjeta, p.precio, ajustes.moneda)
+  const comprobante = `Hola, quiero comprar ${nombre}${precios ? ` por ${total}` : ''}. Ya hice el pago, te mando el comprobante.`
+  const preguntar = `Hola, quiero comprar ${nombre}. ¿Cómo hago el pago?`
+  return (
+    <Hoja titulo="Comprar" onCerrar={onCerrar}>
+      <div className="panel cat-pago-resumen">
+        {p.miniatura && <img src={p.miniatura} alt="" />}
+        <div><b>{nombreProducto(p)}</b>{p.codigo && <small className="suave">Código {p.codigo}</small>}{precios && <span className="cat-total">{total}</span>}</div>
+      </div>
+      {(cuentas || imagen) && (
+        <div className="panel">
+          <h3>1. Paga por transferencia o depósito</h3>
+          {cuentas && <p style={{ whiteSpace: 'pre-wrap' }}>{cuentas}</p>}
+          {cuentas && navigator.clipboard && <button className="btn btn-borde btn-chico" onClick={() => navigator.clipboard.writeText(cuentas).then(() => setCopiado(true)).catch(() => {})}>{copiado ? 'Copiado ✓' : 'Copiar las cuentas'}</button>}
+          {imagen && <a href={imagen} target="_blank" rel="noreferrer"><img src={imagen} alt="Formas de pago" className="cat-img-pago" /></a>}
+        </div>
+      )}
+      {tarjeta && (
+        <div className="panel">
+          <h3>{cuentas || imagen ? 'O paga con tarjeta' : '1. Paga con tarjeta'}</h3>
+          <a className="btn btn-principal" href={tarjeta} target="_blank" rel="noreferrer">{ICONOS.enlace}Pagar con tarjeta</a>
+          {precios && <p className="suave chico">Monto a pagar: <b>{total}</b></p>}
+        </div>
+      )}
+      {responderA && (cuentas || imagen || tarjeta) && (
+        <div className="panel">
+          <h3>2. Manda tu comprobante</h3>
+          <p className="suave chico">Con tu comprobante te confirmamos y te apartamos el {T.producto}.</p>
+          <a className="btn btn-whatsapp" href={enlaceWhatsApp(responderA, comprobante)} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Ya pagué: enviar comprobante</a>
+        </div>
+      )}
+      {responderA && !(cuentas || imagen || tarjeta) && (
+        <div className="panel">
+          <p>Escríbenos y te decimos cómo pagar.</p>
+          <a className="btn btn-whatsapp" href={enlaceWhatsApp(responderA, preguntar)} target="_blank" rel="noreferrer">{ICONOS.whatsapp}Quiero comprarlo</a>
+        </div>
+      )}
+    </Hoja>
+  )
+}
+
+// A los enlaces de PayPal.me se les pone el monto (paypal.me/tienda/2450USD). Otros enlaces van tal cual.
+function enlaceConMonto(enlace: string | undefined, monto: number, moneda: string) {
+  const e = (enlace ?? '').trim()
+  if (!e) return ''
+  const url = /^https?:\/\//i.test(e) ? e : `https://${e}`
+  const m = url.match(/^https?:\/\/(www\.)?paypal\.me\/([^/?#]+)\/?$/i)
+  const usd = /us|\$/i.test(moneda) && !/c\$/i.test(moneda)
+  return m && usd && monto > 0 ? `https://paypal.me/${m[2]}/${monto}USD` : url
 }

@@ -163,6 +163,15 @@ function Catalogo({ a, poner }: { a: TAjustes; poner: <K extends keyof TAjustes>
       <label className="campo" htmlFor="a-cat-mensaje">Mensaje de la portada (opcional)
         <input id="a-cat-mensaje" value={a.catalogoMensaje ?? ''} maxLength={80} onChange={(e) => poner('catalogoMensaje', e.target.value)} placeholder={hoy?.mensaje ?? 'Ej.: Nueva colección de temporada'} />
       </label>
+      <div className="fondos-propios">
+        <b>Pagos desde el catálogo</b>
+        <label className="fila" htmlFor="a-cat-comprar"><input id="a-cat-comprar" type="checkbox" checked={!!a.catalogoComprar} onChange={(e) => poner('catalogoComprar', e.target.checked)} /> Botón "Comprar" en cada {T.producto}</label>
+        <p className="suave chico">Al tocarlo, el cliente ve el precio, tus cuentas (las de <b>Proformas → Formas de pago</b> y la imagen de pago) y el botón para mandar el comprobante por WhatsApp al vendedor.</p>
+        <label className="campo" htmlFor="a-tarjeta">Enlace para pagar con tarjeta (opcional)
+          <input id="a-tarjeta" type="url" inputMode="url" value={a.enlaceTarjeta ?? ''} onChange={(e) => poner('enlaceTarjeta', e.target.value.trim())} placeholder="Ej. https://paypal.me/tutienda" />
+        </label>
+        {a.catalogoComprar && !(a.formasPago ?? '').trim() && !a.imagenPago && !a.enlaceTarjeta && <p className="chico" style={{ color: 'var(--peligro, #c0392b)' }}>Falta poner tus cuentas en Proformas → Formas de pago, o un enlace de tarjeta.</p>}
+      </div>
       <FotosDeFondo fotos={a.catalogoFondos ?? {}} onCambio={(f) => poner('catalogoFondos', f)} />
       <p className="suave chico">Después de cambiar algo, toca <b>Guardar</b> abajo.</p>
       <div className="fila">

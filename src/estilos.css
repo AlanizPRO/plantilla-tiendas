@@ -268,3 +268,9 @@ button.pill { border: 0; cursor: pointer; }
 .cat-recomendado h2 { font-family: "Playfair Display", Georgia, serif; }
 .cat-ver-todo { width: 100%; margin: 6px 0 18px; }
 .cat-me-gusta { font-size: 1.1rem; min-height: 54px; }
+.cat-comprar { width: 100%; }
+.cat-pago-resumen { display: flex; gap: 12px; align-items: center; }
+.cat-pago-resumen img { width: 72px; height: 72px; border-radius: 12px; object-fit: cover; flex: none; }
+.cat-pago-resumen > div { display: grid; gap: 2px; min-width: 0; }
+.cat-total { font-size: 1.4rem; font-weight: 800; }
+.cat-img-pago { width: 100%; border-radius: 12px; display: block; margin-top: 8px; }

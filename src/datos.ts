@@ -47,6 +47,8 @@ export type Ajustes = {
   catalogo?: boolean
   catalogoTema?: string
   catalogoPrecios?: boolean
+  catalogoComprar?: boolean                   // botón "Comprar" en el catálogo (usa Formas de pago e imagen de pago)
+  enlaceTarjeta?: string                      // enlace para pagar con tarjeta (PayPal, banco…), opcional
   catalogoMensaje?: string                    // mensaje propio de la portada (si está vacío, el del tema)
   catalogoFondos?: Record<string, string>     // temas con foto propia: id del tema → miniatura (la foto grande va en fondos/{id})
 }
